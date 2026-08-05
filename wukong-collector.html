@@ -125,20 +125,15 @@
 
 <div class="modal" id="ghModal">
   <div class="mbox" style="width:360px">
-    <h3>☁ GitHub 云存档</h3>
-    <label class="gh-lab">用户名 / 组织</label>
-    <input type="text" id="ghUser" placeholder="你的 GitHub 用户名" value="zhewenzhang">
-    <label class="gh-lab">仓库名</label>
-    <input type="text" id="ghRepo" placeholder="例如 wukong-collector" value="wukong-collector">
-    <label class="gh-lab">分支</label>
-    <input type="text" id="ghBranch" placeholder="main" value="main">
-    <label class="gh-lab">Personal Access Token</label>
-    <input type="password" id="ghToken" placeholder="ghp_... 或 fine-grained token">
-    <p class="gh-help">把进度存到仓库的 <code>state.json</code>，任意设备打开本页即可读取。Token 仅存本机浏览器，<b>不会</b>写入网页源码。建议用 private 仓库 + 仅 Contents 写权限的 fine-grained token。</p>
+    <h3>☁ GitHub 云存档（已自动配置）</h3>
+    <p class="gh-help">配置已内置：仓库 <code>zhewenzhang/wukong-collector</code>（分支 main）。你勾选 / 改备注 / 打标签后会<b>自动保存</b>到 GitHub，换设备打开本页自动加载，<b>无需填写任何信息</b>。</p>
+    <label class="gh-lab">Token 覆盖（可选，仅存本机）</label>
+    <input type="password" id="ghToken" placeholder="正常无需填；仅想用自己的 token 时粘贴">
+    <p class="gh-help">部署者已内置 token，日常零输入。此处仅用于临时覆盖。</p>
     <div class="row">
       <button class="btn" id="ghClose">关闭</button>
       <button class="btn" id="ghLoad">从 GitHub 加载</button>
-      <button class="btn primary" id="ghSave">保存到 GitHub</button>
+      <button class="btn primary" id="ghSave">立即保存</button>
     </div>
     <p class="gh-status" id="ghStatus"></p>
   </div>
@@ -480,7 +475,11 @@ function load(){
   try{ return JSON.parse(localStorage.getItem(KEY)) || {done:{},notes:{},tags:{}}; }
   catch(e){ return {done:{},notes:{},tags:{}}; }
 }
-function save(){ localStorage.setItem(KEY, JSON.stringify(state)); }
+let _ghTimer=null, _ghLoading=false;
+function save(){
+  localStorage.setItem(KEY, JSON.stringify(state));
+  if(!_ghLoading && GH.token){ clearTimeout(_ghTimer); _ghTimer=setTimeout(()=>saveGH(), 800); }
+}
 function idOf(g, it){ return g.id + "::" + it.n; }
 
 let curGroup = GROUPS[0].id;
@@ -650,68 +649,65 @@ document.getElementById("filter").onchange = renderList;
 document.getElementById("fMiss").onchange = renderList;
 document.getElementById("fNg").onchange = renderList;
 
-/* ============ GitHub 云存档 ============ */
+/* ============ GitHub 云存档（配置已内置，自动保存，日常无需填写） ============ */
+// 部署时烘焙：user/repo/branch 固定；token 由部署者填入「仅此仓库、Contents 读写」的 fine-grained token
+const GH = { user:"zhewenzhang", repo:"wukong-collector", branch:"main", token:"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" };
+
 function val(id){ return document.getElementById(id).value.trim(); }
-function ghCfg(){ try{ return JSON.parse(localStorage.getItem("wukong_gh"))||{}; }catch(e){ return {}; } }
-function persistGH(){
-  const c={user:val("ghUser"),repo:val("ghRepo"),branch:val("ghBranch")||"main",token:val("ghToken")};
-  localStorage.setItem("wukong_gh",JSON.stringify(c));
-  return c;
-}
-function setGHStatus(m){ const el=document.getElementById("ghStatus"); if(el) el.textContent=m; }
 function b64encode(str){ return btoa(unescape(encodeURIComponent(str))); }
 function b64decode(b64){ return decodeURIComponent(escape(atob(b64.replace(/\s/g,"")))); }
+function setGHStatus(m){ const el=document.getElementById("ghStatus"); if(el) el.textContent=m; }
+function effToken(){
+  if(GH.token) return GH.token;
+  try{ return (JSON.parse(localStorage.getItem("wukong_gh")||"{}").token)||""; }catch(e){ return ""; }
+}
+
+function autoSaveGH(){ if(_ghLoading||!effToken()) return; clearTimeout(_ghTimer); _ghTimer=setTimeout(()=>saveGH(), 800); }
 
 async function saveGH(){
-  const c=ghCfg();
-  if(!c.user||!c.repo||!c.token){ setGHStatus("请先填好用户名、仓库名和 Token"); return; }
+  const token=effToken();
+  if(!token){ setGHStatus("未配置 Token，无法保存到 GitHub"); return; }
   setGHStatus("保存中…");
-  const url="https://api.github.com/repos/"+c.user+"/"+c.repo+"/contents/state.json";
-  const H={Authorization:"Bearer "+c.token,Accept:"application/vnd.github+json"};
+  const url="https://api.github.com/repos/"+GH.user+"/"+GH.repo+"/contents/state.json";
+  const H={Authorization:"Bearer "+token,Accept:"application/vnd.github+json"};
   try{
     let sha;
-    const g=await fetch(url+"?ref="+encodeURIComponent(c.branch),{headers:H});
+    const g=await fetch(url+"?ref="+encodeURIComponent(GH.branch),{headers:H});
     if(g.status===200){ sha=(await g.json()).sha; }
     else if(g.status!==404){ const e=await g.json().catch(()=>({})); setGHStatus("读取失败: "+(e.message||g.status)); return; }
-    const body={message:"wukong progress update",content:b64encode(JSON.stringify(state)),branch:c.branch};
+    const body={message:"wukong progress update",content:b64encode(JSON.stringify(state)),branch:GH.branch};
     if(sha) body.sha=sha;
     const p=await fetch(url,{method:"PUT",headers:Object.assign({},H,{"Content-Type":"application/json"}),body:JSON.stringify(body)});
-    if(p.ok){ setGHStatus("✅ 已保存到 GitHub（"+c.user+"/"+c.repo+"）"); }
+    if(p.ok){ setGHStatus("✅ 已自动保存到 GitHub"); }
     else{ const e=await p.json().catch(()=>({})); setGHStatus("保存失败: "+(e.message||p.status)); }
   }catch(err){ setGHStatus("网络错误: "+err.message); }
 }
 async function loadGH(){
-  const c=ghCfg();
-  if(!c.user||!c.repo||!c.token){ setGHStatus("请先填好用户名、仓库名和 Token"); return; }
+  const token=effToken();
+  if(!token){ return; }
   setGHStatus("加载中…");
-  const url="https://api.github.com/repos/"+c.user+"/"+c.repo+"/contents/state.json?ref="+encodeURIComponent(c.branch);
-  const H={Authorization:"Bearer "+c.token,Accept:"application/vnd.github+json"};
+  const url="https://api.github.com/repos/"+GH.user+"/"+GH.repo+"/contents/state.json?ref="+encodeURIComponent(GH.branch);
+  const H={Authorization:"Bearer "+token,Accept:"application/vnd.github+json"};
   try{
     const r=await fetch(url,{headers:H});
-    if(r.status===404){ setGHStatus("仓库里还没有 state.json，先点「保存到 GitHub」"); return; }
+    if(r.status===404){ setGHStatus("GitHub 上还没有记录，勾选后会自动保存"); return; }
     if(!r.ok){ const e=await r.json().catch(()=>({})); setGHStatus("加载失败: "+(e.message||r.status)); return; }
     const j=await r.json();
     const d=JSON.parse(b64decode(j.content));
-    if(d&&d.done){ state=d; save(); renderTabs(); renderList(); setGHStatus("✅ 已从 GitHub 加载"); }
+    if(d&&d.done){ _ghLoading=true; state=d; save(); renderTabs(); renderList(); _ghLoading=false; setGHStatus("✅ 已从 GitHub 加载"); }
     else setGHStatus("数据格式不对");
   }catch(err){ setGHStatus("网络错误: "+err.message); }
 }
 document.getElementById("ghBtn").onclick=()=>{
-  const c=ghCfg();
-  document.getElementById("ghUser").value=c.user||"";
-  document.getElementById("ghRepo").value=c.repo||"";
-  document.getElementById("ghBranch").value=c.branch||"main";
-  document.getElementById("ghToken").value=c.token||"";
-  setGHStatus("");
+  setGHStatus(GH.token ? ("已内置配置（"+GH.user+"/"+GH.repo+"），勾选即自动保存") : "未配置 Token");
   document.getElementById("ghModal").classList.add("on");
 };
 document.getElementById("ghClose").onclick=()=>document.getElementById("ghModal").classList.remove("on");
-document.getElementById("ghSave").onclick=()=>{ persistGH(); saveGH(); };
-document.getElementById("ghLoad").onclick=()=>{ persistGH(); loadGH(); };
+document.getElementById("ghSave").onclick=()=>{ const t=val("ghToken"); if(t) localStorage.setItem("wukong_gh",JSON.stringify({token:t})); saveGH(); };
+document.getElementById("ghLoad").onclick=()=>{ const t=val("ghToken"); if(t) localStorage.setItem("wukong_gh",JSON.stringify({token:t})); loadGH(); };
 
-// 启动后若已配置 GitHub，自动拉取最新进度（实现“任意设备随时访问”）
-const _gh=ghCfg();
-if(_gh.user&&_gh.repo&&_gh.token){ loadGH(); }
+// 启动自动从 GitHub 拉取最新进度（实现任意设备随时访问）
+if(effToken()){ loadGH(); }
 
 renderTabs(); renderList();
 </script>
