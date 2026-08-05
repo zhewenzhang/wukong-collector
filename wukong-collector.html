@@ -125,15 +125,15 @@
 
 <div class="modal" id="ghModal">
   <div class="mbox" style="width:360px">
-    <h3>☁ GitHub 云存档（已自动配置）</h3>
-    <p class="gh-help">配置已内置：仓库 <code>zhewenzhang/wukong-collector</code>（分支 main）。你勾选 / 改备注 / 打标签后会<b>自动保存</b>到 GitHub，换设备打开本页自动加载，<b>无需填写任何信息</b>。</p>
-    <label class="gh-lab">Token 覆盖（可选，仅存本机）</label>
-    <input type="password" id="ghToken" placeholder="正常无需填；仅想用自己的 token 时粘贴">
-    <p class="gh-help">部署者已内置 token，日常零输入。此处仅用于临时覆盖。</p>
+    <h3>☁ GitHub 云存档</h3>
+    <p class="gh-help">仓库 <code>zhewenzhang/wukong-collector</code>（分支 main）已固定。首次使用请粘贴你的 Token（<b>仅存本机浏览器</b>），之后勾选 / 改备注 / 打标签会<b>自动保存</b>到 GitHub，换设备打开本页自动加载。</p>
+    <label class="gh-lab">Personal Access Token（首次必填，仅存本机）</label>
+    <input type="password" id="ghToken" placeholder="github_pat_... 或 ghp_...">
+    <p class="gh-help">建议用仅授权本仓库 Contents 读写的 fine-grained token。Token <b>不写入网页源码</b>，仅存你这台浏览器；换设备需再填一次。</p>
     <div class="row">
       <button class="btn" id="ghClose">关闭</button>
-      <button class="btn" id="ghLoad">从 GitHub 加载</button>
-      <button class="btn primary" id="ghSave">立即保存</button>
+      <button class="btn" id="ghLoad">保存配置并加载</button>
+      <button class="btn primary" id="ghSave">保存配置并同步</button>
     </div>
     <p class="gh-status" id="ghStatus"></p>
   </div>
@@ -651,7 +651,7 @@ document.getElementById("fNg").onchange = renderList;
 
 /* ============ GitHub 云存档（配置已内置，自动保存，日常无需填写） ============ */
 // 部署时烘焙：user/repo/branch 固定；token 由部署者填入「仅此仓库、Contents 读写」的 fine-grained token
-const GH = { user:"zhewenzhang", repo:"wukong-collector", branch:"main", token:"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" };
+const GH = { user:"zhewenzhang", repo:"wukong-collector", branch:"main", token:"" };
 
 function val(id){ return document.getElementById(id).value.trim(); }
 function b64encode(str){ return btoa(unescape(encodeURIComponent(str))); }
@@ -699,7 +699,7 @@ async function loadGH(){
   }catch(err){ setGHStatus("网络错误: "+err.message); }
 }
 document.getElementById("ghBtn").onclick=()=>{
-  setGHStatus(GH.token ? ("已内置配置（"+GH.user+"/"+GH.repo+"），勾选即自动保存") : "未配置 Token");
+  setGHStatus(localStorage.getItem("wukong_gh") ? ("已记住配置（"+GH.user+"/"+GH.repo+"），勾选即自动保存") : "首次使用：请粘贴 Token 并点「保存配置并同步」");
   document.getElementById("ghModal").classList.add("on");
 };
 document.getElementById("ghClose").onclick=()=>document.getElementById("ghModal").classList.remove("on");
