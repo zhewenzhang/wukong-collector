@@ -3,114 +3,213 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>黑神话悟空 · 收集图鉴管理</title>
+<title>黑神话悟空 · 收集图鉴</title>
 <style>
   :root{
-    --bg:#0e0c0a; --panel:#1a1714; --panel2:#221d18; --line:#3a3026;
-    --gold:#d9a441; --gold-dim:#9c7a32; --txt:#e8dfd0; --txt-dim:#9a8f7e;
-    --green:#6fae5b; --blue:#5b8fc9; --purple:#a06fc9; --red:#c96d5b; --grey:#6b6258;
+    --bg:#0e0c0a; --panel:#17130f; --panel2:#211b15; --line:#352c22; --line2:#463a2c;
+    --gold:#d9a441; --gold-dim:#9c7a32; --gold-soft:#e8c879;
+    --txt:#ece3d4; --txt-dim:#9a8f7e; --txt-faint:#6f6657;
+    --green:#6fae5b; --blue:#5b8fc9; --purple:#a06fc9; --red:#d96b5b; --grey:#7a7165;
     --stat:#e8c06a; --eff:#8fbf9a;
+    --radius:10px; --shadow:0 10px 34px rgba(0,0,0,.45);
   }
   *{box-sizing:border-box}
-  body{margin:0;background:var(--bg);color:var(--txt);font-family:"PingFang SC","Microsoft YaHei",system-ui,sans-serif;font-size:14px;}
-  header{padding:16px 20px;border-bottom:1px solid var(--line);background:linear-gradient(180deg,#15110d,#0e0c0a);position:sticky;top:0;z-index:20;}
-  h1{margin:0;font-size:18px;color:var(--gold);letter-spacing:2px;font-weight:600;}
-  h1 small{color:var(--txt-dim);font-size:12px;letter-spacing:0;margin-left:8px;}
-  .total{margin-top:10px;display:flex;align-items:center;gap:12px;}
-  .bar{flex:1;height:10px;background:var(--panel2);border:1px solid var(--line);border-radius:6px;overflow:hidden;}
-  .bar>i{display:block;height:100%;background:linear-gradient(90deg,var(--gold-dim),var(--gold));width:0;transition:width .3s;}
-  .total b{color:var(--gold);font-variant-numeric:tabular-nums;min-width:120px;text-align:right;}
-  .tabs{display:flex;gap:6px;overflow-x:auto;padding:10px 20px 0;border-bottom:1px solid var(--line);background:var(--panel);position:sticky;top:84px;z-index:15;}
-  .tab{flex:none;padding:8px 14px;border:1px solid var(--line);border-bottom:none;border-radius:8px 8px 0 0;background:var(--panel2);color:var(--txt-dim);cursor:pointer;white-space:nowrap;font-size:13px;}
-  .tab.on{background:var(--bg);color:var(--gold);border-color:var(--gold-dim);}
-  .tab .c{font-size:11px;color:var(--txt-dim);margin-left:5px;}
-  .ctrl{display:flex;flex-wrap:wrap;gap:8px;padding:12px 20px;align-items:center;background:var(--panel);}
-  .ctrl input[type=text]{flex:1;min-width:180px;background:var(--panel2);border:1px solid var(--line);color:var(--txt);padding:8px 10px;border-radius:7px;}
-  .ctrl select{background:var(--panel2);border:1px solid var(--line);color:var(--txt);padding:8px 10px;border-radius:7px;}
-  .ctrl label{display:flex;align-items:center;gap:5px;color:var(--txt-dim);font-size:13px;cursor:pointer;user-select:none;}
-  .btn{background:var(--panel2);border:1px solid var(--line);color:var(--txt);padding:8px 12px;border-radius:7px;cursor:pointer;font-size:13px;}
-  .btn:hover{border-color:var(--gold-dim);color:var(--gold);}
-  .btn.danger:hover{border-color:var(--red);color:var(--red);}
-  .btn.primary{background:linear-gradient(180deg,var(--gold),var(--gold-dim));color:#1a140a;border-color:var(--gold);font-weight:600;}
-  .btn.primary:hover{color:#1a140a;filter:brightness(1.08);}
-  main{padding:14px 20px 60px;max-width:1100px;margin:0 auto;}
-  .item{display:flex;align-items:flex-start;gap:10px;padding:9px 10px;border:1px solid var(--line);border-radius:8px;margin-bottom:6px;background:var(--panel);}
-  .item.done{opacity:.55;}
-  .item.done .nm{text-decoration:line-through;color:var(--txt-dim);}
-  .item .chk{width:18px;height:18px;flex:none;margin-top:2px;cursor:pointer;accent-color:var(--gold);}
-  .nm{flex:1;min-width:0;}
+  html,body{margin:0}
+  body{
+    background:var(--bg); color:var(--txt);
+    font-family:"PingFang SC","Microsoft YaHei",system-ui,-apple-system,sans-serif;
+    font-size:14px; line-height:1.5; -webkit-font-smoothing:antialiased;
+  }
+  /* ---------- header ---------- */
+  header{
+    padding:18px 22px 14px; border-bottom:1px solid var(--line);
+    background:linear-gradient(180deg,#15110d,#0e0c0a);
+    position:sticky; top:0; z-index:30;
+  }
+  .wrap{max-width:1080px; margin:0 auto;}
+  .brand{display:flex; align-items:baseline; gap:10px;}
+  h1{margin:0; font-size:19px; color:var(--gold); letter-spacing:2px; font-weight:600;}
+  .ver{font-size:11px; color:var(--txt-faint); border:1px solid var(--line2); padding:1px 7px; border-radius:20px; letter-spacing:.5px;}
+  .tagline{margin:4px 0 0; color:var(--txt-dim); font-size:12px; letter-spacing:.3px;}
+  .total{margin-top:12px; display:flex; align-items:center; gap:14px;}
+  .bar{flex:1; height:8px; background:var(--panel2); border:1px solid var(--line); border-radius:20px; overflow:hidden;}
+  .bar>i{display:block; height:100%; background:linear-gradient(90deg,var(--gold-dim),var(--gold-soft)); width:0; transition:width .35s ease;}
+  .total b{color:var(--gold); font-variant-numeric:tabular-nums; min-width:118px; text-align:right; font-weight:600; letter-spacing:.5px;}
+  /* ---------- tabs ---------- */
+  .tabs{
+    display:flex; gap:6px; overflow-x:auto; padding:10px 22px 0; border-bottom:1px solid var(--line);
+    background:var(--panel); position:sticky; top:96px; z-index:25; scrollbar-width:thin;
+  }
+  .tabs::-webkit-scrollbar{height:6px}
+  .tabs::-webkit-scrollbar-thumb{background:var(--line2); border-radius:6px}
+  .tab{
+    flex:none; padding:8px 14px; border:1px solid var(--line); border-bottom:none;
+    border-radius:9px 9px 0 0; background:var(--panel2); color:var(--txt-dim);
+    cursor:pointer; white-space:nowrap; font-size:13px; transition:.15s;
+  }
+  .tab:hover{color:var(--txt); border-color:var(--line2);}
+  .tab.on{background:var(--bg); color:var(--gold); border-color:var(--gold-dim);}
+  .tab .c{font-size:11px; color:var(--txt-faint); margin-left:6px;}
+  .tab.on .c{color:var(--gold-dim);}
+  /* ---------- control bar ---------- */
+  .ctrl{
+    display:flex; flex-wrap:wrap; gap:8px; align-items:center; padding:12px 22px;
+    background:var(--panel); border-bottom:1px solid var(--line); position:sticky; top:143px; z-index:20;
+  }
+  .search-wrap{position:relative; flex:1; min-width:200px;}
+  .search-wrap .ic{position:absolute; left:10px; top:50%; transform:translateY(-50%); font-size:13px; opacity:.5; pointer-events:none;}
+  .ctrl input[type=text]{
+    width:100%; background:var(--panel2); border:1px solid var(--line); color:var(--txt);
+    padding:8px 10px 8px 30px; border-radius:8px; outline:none; transition:.15s;
+  }
+  .ctrl input[type=text]:focus{border-color:var(--gold-dim);}
+  .ctrl select{
+    background:var(--panel2); border:1px solid var(--line); color:var(--txt);
+    padding:8px 10px; border-radius:8px; outline:none; cursor:pointer;
+  }
+  .chip-toggle{
+    display:inline-flex; align-items:center; gap:6px; padding:6px 11px; border-radius:20px;
+    border:1px solid var(--line); color:var(--txt-dim); font-size:13px; cursor:pointer;
+    user-select:none; transition:.15s; background:var(--panel2);
+  }
+  .chip-toggle:hover{border-color:var(--line2); color:var(--txt);}
+  .chip-toggle input{accent-color:var(--gold); margin:0;}
+  .chip-toggle.on{border-color:var(--gold-dim); color:var(--gold); background:rgba(217,164,65,.08);}
+  .spacer{flex:1 1 auto;}
+  .btn{
+    background:var(--panel2); border:1px solid var(--line); color:var(--txt);
+    padding:8px 13px; border-radius:8px; cursor:pointer; font-size:13px; transition:.15s; white-space:nowrap;
+  }
+  .btn:hover{border-color:var(--gold-dim); color:var(--gold);}
+  .btn.primary{background:linear-gradient(180deg,var(--gold-soft),var(--gold-dim)); color:#1a140a; border-color:var(--gold); font-weight:600;}
+  .btn.primary:hover{color:#1a140a; filter:brightness(1.07);}
+  .btn.danger:hover{border-color:var(--red); color:var(--red);}
+  .menu-wrap{position:relative;}
+  .menu{
+    position:absolute; right:0; top:calc(100% + 6px); min-width:148px; background:var(--panel);
+    border:1px solid var(--line2); border-radius:10px; box-shadow:var(--shadow); padding:6px; z-index:60; display:none;
+  }
+  .menu.open{display:block; animation:pop .12s ease;}
+  @keyframes pop{from{opacity:0; transform:translateY(-4px);} to{opacity:1; transform:none;}}
+  .menu button{
+    display:block; width:100%; text-align:left; background:none; border:none; color:var(--txt);
+    padding:9px 11px; border-radius:7px; cursor:pointer; font-size:13px;
+  }
+  .menu button:hover{background:var(--panel2); color:var(--gold);}
+  .menu button.danger:hover{color:var(--red);}
+  .menu hr{border:none; border-top:1px solid var(--line); margin:5px 2px;}
+  /* ---------- list ---------- */
+  main{padding:14px 22px 70px;}
+  .item{
+    display:flex; align-items:flex-start; gap:11px; padding:11px 13px; border:1px solid var(--line);
+    border-radius:var(--radius); margin-bottom:7px; background:var(--panel); transition:border-color .15s, background .15s;
+  }
+  .item:hover{border-color:var(--line2);}
+  .item.done{opacity:.5; background:var(--panel2);}
+  .item.done .nm{text-decoration:line-through; color:var(--txt-dim);}
+  .item .chk{width:18px; height:18px; flex:none; margin-top:2px; cursor:pointer; accent-color:var(--gold);}
+  .nm{flex:1; min-width:0;}
   .nm .title{font-weight:500;}
-  .nm .sub{color:var(--txt-dim);font-size:12px;margin-top:2px;line-height:1.4;}
-  .nm .stat{color:var(--stat);font-size:12px;margin-top:3px;}
-  .nm .eff{color:var(--eff);font-size:12px;margin-top:2px;line-height:1.4;}
-  .q{display:inline-block;font-size:11px;padding:1px 6px;border-radius:4px;margin-right:6px;vertical-align:middle;border:1px solid;}
-  .q.良{color:var(--grey);border-color:var(--grey);}
-  .q.上{color:var(--green);border-color:var(--green);}
-  .q.特{color:var(--blue);border-color:var(--blue);}
-  .q.仙{color:var(--purple);border-color:var(--purple);}
-  .q.神珍{color:var(--gold);border-color:var(--gold);}
-  .tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px;}
-  .tg{font-size:11px;padding:1px 7px;border-radius:10px;background:var(--panel2);border:1px solid var(--line);color:var(--txt-dim);}
-  .tg.易漏{color:var(--red);border-color:var(--red);}
-  .tg.二周目{color:var(--purple);border-color:var(--purple);}
-  .tg.BOSS{color:var(--blue);border-color:var(--blue);}
-  .ops{flex:none;display:flex;flex-direction:column;gap:5px;align-items:flex-end;}
-  .mini{font-size:12px;color:var(--txt-dim);cursor:pointer;background:none;border:1px solid var(--line);border-radius:6px;padding:3px 8px;}
-  .mini:hover{color:var(--gold);border-color:var(--gold-dim);}
-  .empty{color:var(--txt-dim);text-align:center;padding:40px;}
-  .note-edit{width:100%;background:var(--panel2);border:1px solid var(--line);color:var(--txt);border-radius:6px;padding:6px;font-size:12px;margin-top:6px;font-family:inherit;}
-  .modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;z-index:50;}
+  .nm .sub{color:var(--txt-dim); font-size:12px; margin-top:3px; line-height:1.45;}
+  .nm .stat{color:var(--stat); font-size:12px; margin-top:4px;}
+  .nm .eff{color:var(--eff); font-size:12px; margin-top:3px; line-height:1.45;}
+  .q{display:inline-block; font-size:11px; padding:1px 6px; border-radius:4px; margin-right:6px; vertical-align:middle; border:1px solid;}
+  .q.良{color:var(--grey); border-color:var(--grey);}
+  .q.上{color:var(--green); border-color:var(--green);}
+  .q.特{color:var(--blue); border-color:var(--blue);}
+  .q.仙{color:var(--purple); border-color:var(--purple);}
+  .q.神珍{color:var(--gold); border-color:var(--gold);}
+  .tags{display:flex; flex-wrap:wrap; gap:4px; margin-top:7px;}
+  .tg{font-size:11px; padding:1px 8px; border-radius:11px; background:var(--panel2); border:1px solid var(--line); color:var(--txt-dim);}
+  .tg.易漏{color:var(--red); border-color:var(--red);}
+  .tg.二周目{color:var(--purple); border-color:var(--purple);}
+  .tg.BOSS{color:var(--blue); border-color:var(--blue);}
+  .tg.参考{color:var(--txt-faint); border-color:var(--line2);}
+  .ops{flex:none; display:flex; gap:6px; align-items:flex-start;}
+  .mini{font-size:12px; color:var(--txt-dim); cursor:pointer; background:none; border:1px solid var(--line); border-radius:6px; padding:4px 9px; transition:.15s;}
+  .mini:hover{color:var(--gold); border-color:var(--gold-dim);}
+  .empty{color:var(--txt-dim); text-align:center; padding:48px 0; font-size:14px;}
+  /* ---------- footer ---------- */
+  footer{text-align:center; color:var(--txt-faint); font-size:12px; padding:24px 22px 36px; line-height:1.7; border-top:1px solid var(--line);}
+  footer code{background:var(--panel2); padding:1px 6px; border-radius:4px; color:var(--gold-dim);}
+  footer b{color:var(--txt-dim);}
+  /* ---------- modal ---------- */
+  .modal{position:fixed; inset:0; background:rgba(0,0,0,.62); display:none; align-items:center; justify-content:center; z-index:80; padding:18px;}
   .modal.on{display:flex;}
-  .mbox{background:var(--panel);border:1px solid var(--gold-dim);border-radius:12px;padding:18px;width:320px;max-width:90vw;}
-  .mbox h3{margin:0 0 12px;color:var(--gold);font-size:15px;}
-  .mbox .chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;}
-  .mbox .chips span{padding:4px 10px;border:1px solid var(--line);border-radius:14px;cursor:pointer;font-size:13px;}
-  .mbox .chips span.on{background:var(--gold);color:#000;border-color:var(--gold);}
-  .mbox input{width:100%;background:var(--panel2);border:1px solid var(--line);color:var(--txt);padding:8px;border-radius:7px;margin-bottom:12px;}
-  .mbox .row{display:flex;gap:8px;justify-content:flex-end;}
-  .mbox .gh-lab{display:block;color:var(--txt-dim);font-size:12px;margin:8px 0 3px;}
-  .mbox .gh-help{color:var(--txt-dim);font-size:12px;line-height:1.5;margin:6px 0 0;}
-  .mbox .gh-help code{background:var(--panel2);padding:1px 5px;border-radius:4px;color:var(--gold);}
-  .mbox .gh-status{color:var(--gold);font-size:12px;min-height:16px;margin:10px 0 0;}
-  footer{text-align:center;color:var(--txt-dim);font-size:12px;padding:20px;}
-  a{color:var(--gold);}
+  .mbox{background:var(--panel); border:1px solid var(--gold-dim); border-radius:14px; padding:20px; width:360px; max-width:94vw; box-shadow:var(--shadow);}
+  .mbox h3{margin:0 0 14px; color:var(--gold); font-size:15px; letter-spacing:.5px;}
+  .mbox .chips{display:flex; flex-wrap:wrap; gap:6px; margin-bottom:12px;}
+  .mbox .chips span{padding:5px 12px; border:1px solid var(--line); border-radius:16px; cursor:pointer; font-size:13px; color:var(--txt-dim); transition:.15s;}
+  .mbox .chips span:hover{border-color:var(--line2); color:var(--txt);}
+  .mbox .chips span.on{background:var(--gold); color:#1a140a; border-color:var(--gold); font-weight:500;}
+  .mbox input{width:100%; background:var(--panel2); border:1px solid var(--line); color:var(--txt); padding:9px; border-radius:8px; margin-bottom:14px; outline:none;}
+  .mbox input:focus{border-color:var(--gold-dim);}
+  .mbox .row{display:flex; gap:8px; justify-content:flex-end;}
+  .mbox .gh-lab{display:block; color:var(--txt-dim); font-size:12px; margin:10px 0 4px;}
+  .mbox .gh-help{color:var(--txt-dim); font-size:12px; line-height:1.6; margin:8px 0 0;}
+  .mbox .gh-help code{background:var(--panel2); padding:1px 6px; border-radius:4px; color:var(--gold);}
+  .gh-status{color:var(--gold); font-size:12px; min-height:16px; margin:12px 0 0;}
+  /* ---------- toast ---------- */
+  .toast{
+    position:fixed; left:50%; bottom:26px; transform:translateX(-50%) translateY(18px);
+    background:var(--panel); border:1px solid var(--gold-dim); color:var(--txt);
+    padding:10px 18px; border-radius:10px; font-size:13px; opacity:0; pointer-events:none;
+    transition:.25s; z-index:90; box-shadow:var(--shadow); max-width:90vw;
+  }
+  .toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
+  .toast.err{border-color:var(--red); color:var(--red);}
 </style>
 </head>
 <body>
 <header>
-  <h1>黑神话悟空 · 收集图鉴<small>勾选即收藏 · 数据存本地浏览器</small></h1>
-  <div class="total">
-    <div class="bar"><i id="bar"></i></div>
-    <b id="totalTxt">0 / 0 (0%)</b>
+  <div class="wrap">
+    <div class="brand"><h1>黑神话悟空 · 收集图鉴</h1><span class="ver" id="ver">v1.0.0</span></div>
+    <p class="tagline">勾选即收藏 · 进度存本地浏览器，可选同步到 GitHub</p>
+    <div class="total">
+      <div class="bar"><i id="bar"></i></div>
+      <b id="totalTxt">0 / 0</b>
+    </div>
   </div>
 </header>
 
-<div class="tabs" id="tabs"></div>
+<nav class="tabs" id="tabs"></nav>
 
 <div class="ctrl">
-  <input type="text" id="search" placeholder="搜索名称 / 属性 / 效果 / 备注 / 标签…">
+  <div class="search-wrap">
+    <span class="ic">🔍</span>
+    <input type="text" id="search" placeholder="搜索名称 / 属性 / 效果 / 备注 / 标签…">
+  </div>
   <select id="filter">
     <option value="all">全部</option>
     <option value="todo">仅未收集</option>
     <option value="done">仅已收集</option>
   </select>
-  <label><input type="checkbox" id="fMiss"> 易漏优先</label>
-  <label><input type="checkbox" id="fNg"> 仅二周目</label>
-  <button class="btn primary" id="saveHtml">💾 保存离线存档</button>
-  <button class="btn" id="ghBtn">☁ GitHub 存档</button>
-  <button class="btn" id="export">导出</button>
-  <button class="btn" id="importBtn">导入</button>
-  <button class="btn danger" id="reset">重置进度</button>
-  <input type="file" id="importFile" accept=".json" style="display:none">
+  <label class="chip-toggle" id="fMissWrap"><input type="checkbox" id="fMiss"> 易漏优先</label>
+  <label class="chip-toggle" id="fNgWrap"><input type="checkbox" id="fNg"> 仅二周目</label>
+  <div class="spacer"></div>
+  <button class="btn" id="ghBtn">☁ 云同步</button>
+  <button class="btn primary" id="saveHtml">💾 离线存档</button>
+  <div class="menu-wrap">
+    <button class="btn" id="moreBtn">⋯ 管理</button>
+    <div class="menu" id="moreMenu">
+      <button data-act="export">导出备份</button>
+      <button data-act="import">导入备份</button>
+      <hr>
+      <button data-act="reset" class="danger">重置进度</button>
+    </div>
+  </div>
+  <input type="file" id="importFile" accept=".json" hidden>
 </div>
 
 <main id="main"></main>
 
 <footer>
-  属性/效果数据基于公开攻略整理（萌娘百科 / B站 wiki / 游民星空等）。数值为游戏内参考值，披挂防御取神珍品质、武器取基础攻击，套装详细效果与部分独门妙用请以游戏内图鉴为准。
-  工具内可随时手动增删、改备注。<b>进度持久化三选一</b>：①「💾 保存离线存档」生成带进度的单文件，双击即记得；②「☁ GitHub 存档」把进度推到仓库 <code>state.json</code>，任意设备打开即同步；③「导出」存 JSON 备份。localStorage 仅作同文件内的辅助，预览面板 / 隐私模式下会失效。
+  <div id="verLine"></div>
+  属性 / 效果数据基于公开攻略整理（萌娘百科 / B站 wiki / 游民星空等），为游戏内参考值，套装详细效果与部分独门妙用请以游戏内图鉴为准。工具内可随时手动增删、改备注。<br>
+  <b>进度三种持久化</b>：①「💾 离线存档」生成带进度的单文件，双击即记得；②「☁ 云同步」把进度推到仓库 <code>state.json</code>，任意设备打开即同步；③「⋯ 管理 → 导出」存 JSON 备份。
 </footer>
 
+<!-- 打标签弹窗 -->
 <div class="modal" id="modal">
   <div class="mbox">
     <h3 id="modalTitle">打标签</h3>
@@ -123,27 +222,33 @@
   </div>
 </div>
 
+<!-- GitHub 云同步弹窗 -->
 <div class="modal" id="ghModal">
-  <div class="mbox" style="width:360px">
-    <h3>☁ GitHub 云存档</h3>
+  <div class="mbox">
+    <h3>☁ GitHub 云同步</h3>
     <p class="gh-help">仓库 <code>zhewenzhang/wukong-collector</code>（分支 main）已固定。首次使用请粘贴你的 Token（<b>仅存本机浏览器</b>），之后勾选 / 改备注 / 打标签会<b>自动保存</b>到 GitHub，换设备打开本页自动加载。</p>
     <label class="gh-lab">Personal Access Token（首次必填，仅存本机）</label>
     <input type="password" id="ghToken" placeholder="github_pat_... 或 ghp_...">
     <p class="gh-help">建议用仅授权本仓库 Contents 读写的 fine-grained token。Token <b>不写入网页源码</b>，仅存你这台浏览器；换设备需再填一次。</p>
     <div class="row">
       <button class="btn" id="ghClose">关闭</button>
-      <button class="btn" id="ghLoad">保存配置并加载</button>
-      <button class="btn primary" id="ghSave">保存配置并同步</button>
+      <button class="btn" id="ghLoad">配置并加载</button>
+      <button class="btn primary" id="ghSave">配置并同步</button>
     </div>
     <p class="gh-status" id="ghStatus"></p>
   </div>
 </div>
 
+<div class="toast" id="toast"></div>
+
 <script id="init-state">window.__INITIAL_STATE__=null;</script>
 
 <script>
+/* ============ 版本 ============ */
+const VERSION = "1.0.0";
+
 /* ============ 数据：黑神话悟空收集图鉴 ============
-   字段: n=名称, q=品质, s=获取/备注, t=预设标签(易漏/二周目/BOSS)
+   字段: n=名称, q=品质, s=获取/备注, t=预设标签(易漏/二周目/BOSS/参考)
         stat=属性加成(攻击/防御/暴击/耐性等), effect=特性/效果/套装效果
    武器/珍玩/泡酒物/种子数据较完整；披挂填套装归属+神珍防御+独门妙用；丹方填炼制丹药；材料留空。 */
 const GROUPS = [
@@ -461,29 +566,36 @@ const GROUPS = [
   ]}
 ];
 
-/* ============ 状态管理 ============ */
+/* ============ 状态管理（含稳定性归一化与容错） ============ */
 const KEY = "wukong_collector_v2";
-let state = load();
+const PRESET = ["易漏","二周目","BOSS","隐藏","支线","豪华版"];
+
+function normState(s){
+  s = (s && typeof s==="object") ? s : {};
+  return { done:(s.done&&typeof s.done==="object")?s.done:{},
+           notes:(s.notes&&typeof s.notes==="object")?s.notes:{},
+           tags:(s.tags&&typeof s.tags==="object")?s.tags:{} };
+}
 function load(){
   // 优先：文件自身烘焙的进度（离线单文件，跨浏览器/跨会话都可靠）
   try{
-    if(window.__INITIAL_STATE__ && typeof window.__INITIAL_STATE__ === "object"){
-      return window.__INITIAL_STATE__;
+    if(window.__INITIAL_STATE__ && typeof window.__INITIAL_STATE__==="object"){
+      return normState(window.__INITIAL_STATE__);
     }
-  }catch(e){}
+  }catch(e){ /* 忽略损坏的烘焙数据 */ }
   // 兜底：本机浏览器存储（同 file:// 原点下可用，预览面板/隐私模式可能失效）
-  try{ return JSON.parse(localStorage.getItem(KEY)) || {done:{},notes:{},tags:{}}; }
+  try{ return normState(JSON.parse(localStorage.getItem(KEY))); }
   catch(e){ return {done:{},notes:{},tags:{}}; }
 }
+let state = load();
 let _ghTimer=null, _ghLoading=false;
 function save(){
-  localStorage.setItem(KEY, JSON.stringify(state));
-  if(!_ghLoading && GH.token){ clearTimeout(_ghTimer); _ghTimer=setTimeout(()=>saveGH(), 800); }
+  try{ localStorage.setItem(KEY, JSON.stringify(state)); }catch(e){ /* 存储不可用（隐私模式等）时静默降级 */ }
+  if(!_ghLoading && effToken()){ clearTimeout(_ghTimer); _ghTimer=setTimeout(()=>saveGH(), 800); }
 }
 function idOf(g, it){ return g.id + "::" + it.n; }
 
 let curGroup = GROUPS[0].id;
-const PRESET = ["易漏","二周目","BOSS","隐藏","支线","豪华版"];
 
 /* ============ 渲染 ============ */
 function renderTabs(){
@@ -494,13 +606,14 @@ function renderTabs(){
     const done = g.items.filter(it=>state.done[idOf(g,it)]).length;
     const el = document.createElement("div");
     el.className = "tab" + (g.id===curGroup?" on":"");
-    el.innerHTML = g.name + '<span class="c">'+done+'/'+total+'</span>';
+    el.innerHTML = esc(g.name) + '<span class="c">'+done+'/'+total+'</span>';
     el.onclick = ()=>{ curGroup=g.id; renderTabs(); renderList(); };
     tabs.appendChild(el);
   });
 }
 function renderList(){
   const g = GROUPS.find(x=>x.id===curGroup);
+  if(!g){ document.getElementById("main").innerHTML='<div class="empty">分类数据缺失</div>'; return; }
   const main = document.getElementById("main");
   const q = document.getElementById("search").value.trim().toLowerCase();
   const filt = document.getElementById("filter").value;
@@ -522,33 +635,35 @@ function renderList(){
   if(!items.length){ main.innerHTML = '<div class="empty">这个分类下没有匹配项 🐒</div>'; updateTotal(); return; }
   const wrap = document.createElement("div");
   items.forEach(({it,id})=>{
-    const done = !!state.done[id];
-    const tags = (it.t||[]).concat(state.tags[id]||[]);
-    const div = document.createElement("div");
-    div.className = "item" + (done?" done":"");
-    let chips = tags.map(t=>'<span class="tg '+t+'">'+t+'</span>').join("");
-    let statLine = it.stat ? '<div class="stat">属性：'+esc(it.stat)+'</div>' : '';
-    let effLine = it.effect ? '<div class="eff">特性：'+esc(it.effect)+'</div>' : '';
-    div.innerHTML =
-      '<input type="checkbox" class="chk" '+(done?"checked":"")+'>'+
-      '<div class="nm"><div class="title">'+
-        (it.q?'<span class="q '+it.q+'">'+it.q+'</span>':'')+it.n+'</div>'+
-        (it.s?'<div class="sub">'+esc(it.s)+'</div>':'')+
-        statLine + effLine +
-        (state.notes[id]?'<div class="sub" style="color:var(--gold-dim)">📝 '+esc(state.notes[id])+'</div>':'')+
-        (chips?'<div class="tags">'+chips+'</div>':'')+
-      '</div>'+
-      '<div class="ops">'+
-        '<button class="mini" data-act="tag">+标签</button>'+
-        '<button class="mini" data-act="note">备注</button>'+
-      '</div>';
-    div.querySelector(".chk").onchange = (e)=>{ state.done[id]=e.target.checked; save(); renderTabs(); updateTotal(); };
-    div.querySelector('[data-act="tag"]').onclick = ()=> openModal(id);
-    div.querySelector('[data-act="note"]').onclick = ()=>{
-      const v = prompt("备注（" + it.n + "）：", state.notes[id]||"");
-      if(v!==null){ state.notes[id]=v.trim(); save(); renderList(); }
-    };
-    wrap.appendChild(div);
+    try{
+      const done = !!state.done[id];
+      const tags = (it.t||[]).concat(state.tags[id]||[]);
+      const div = document.createElement("div");
+      div.className = "item" + (done?" done":"");
+      let chips = tags.map(t=>'<span class="tg '+esc(t)+'">'+esc(t)+'</span>').join("");
+      let statLine = it.stat ? '<div class="stat">属性：'+esc(it.stat)+'</div>' : '';
+      let effLine = it.effect ? '<div class="eff">特性：'+esc(it.effect)+'</div>' : '';
+      div.innerHTML =
+        '<input type="checkbox" class="chk" '+(done?"checked":"")+'>'+
+        '<div class="nm"><div class="title">'+
+          (it.q?'<span class="q '+it.q+'">'+it.q+'</span>':'')+esc(it.n)+'</div>'+
+          (it.s?'<div class="sub">'+esc(it.s)+'</div>':'')+
+          statLine + effLine +
+          (state.notes[id]?'<div class="sub" style="color:var(--gold-dim)">📝 '+esc(state.notes[id])+'</div>':'')+
+          (chips?'<div class="tags">'+chips+'</div>':'')+
+        '</div>'+
+        '<div class="ops">'+
+          '<button class="mini" data-act="tag">+标签</button>'+
+          '<button class="mini" data-act="note">备注</button>'+
+        '</div>';
+      div.querySelector(".chk").onchange = (e)=>{ state.done[id]=e.target.checked; save(); renderTabs(); updateTotal(); };
+      div.querySelector('[data-act="tag"]').onclick = ()=> openModal(id);
+      div.querySelector('[data-act="note"]').onclick = ()=>{
+        const v = prompt("备注（" + it.n + "）：", state.notes[id]||"");
+        if(v!==null){ state.notes[id]=v.trim(); save(); renderList(); }
+      };
+      wrap.appendChild(div);
+    }catch(err){ console.warn("渲染条目失败，已跳过：", id, err); }
   });
   main.appendChild(wrap);
   updateTotal();
@@ -566,7 +681,7 @@ function updateTotal(){
   document.getElementById("bar").style.width = pct+"%";
   document.getElementById("totalTxt").textContent = done+" / "+total+" ("+pct+"%)";
 }
-function esc(s){ return s.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
+function esc(s){ return String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
 
 /* ============ 标签弹窗 ============ */
 let modalId = null;
@@ -597,28 +712,18 @@ document.getElementById("modalOk").onclick = ()=>{
 };
 document.getElementById("customTag").addEventListener("keydown",e=>{ if(e.key==="Enter") document.getElementById("modalOk").click(); });
 
-/* ============ 导入导出重置 ============ */
-document.getElementById("export").onclick = ()=>{
-  const blob = new Blob([JSON.stringify(state,null,2)],{type:"application/json"});
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = "黑神话收集进度_"+new Date().toISOString().slice(0,10)+".json";
-  a.click();
-};
-document.getElementById("importBtn").onclick = ()=> document.getElementById("importFile").click();
-document.getElementById("importFile").onchange = e=>{
-  const f = e.target.files[0]; if(!f) return;
-  const r = new FileReader();
-  r.onload = ()=>{ try{ const d=JSON.parse(r.result); if(d&&d.done){ state=d; save(); renderTabs(); renderList(); alert("导入成功"); } }catch(err){ alert("文件格式错误"); } };
-  r.readAsText(f);
-};
-document.getElementById("reset").onclick = ()=>{
-  if(confirm("确定清空所有收集进度？此操作不可撤销（建议先导出备份）。")){
-    state={done:{},notes:{},tags:{}}; save(); renderTabs(); renderList();
-  }
-};
+/* ============ 「⋯ 管理」菜单 ============ */
+const moreBtn = document.getElementById("moreBtn");
+const moreMenu = document.getElementById("moreMenu");
+moreBtn.onclick = (e)=>{ e.stopPropagation(); moreMenu.classList.toggle("open"); };
+document.addEventListener("click",(e)=>{
+  if(moreMenu.classList.contains("open") && !moreMenu.contains(e.target) && e.target!==moreBtn){ moreMenu.classList.remove("open"); }
+});
+moreMenu.querySelector('[data-act="export"]').onclick = ()=>{ moreMenu.classList.remove("open"); doExport(); };
+moreMenu.querySelector('[data-act="import"]').onclick = ()=>{ moreMenu.classList.remove("open"); document.getElementById("importFile").click(); };
+moreMenu.querySelector('[data-act="reset"]').onclick = ()=>{ moreMenu.classList.remove("open"); doReset(); };
 
-/* 把进度烘焙进 HTML 文件本身，下载一个“带进度”的单文件，双击即记得 */
+/* ============ 导入 / 导出 / 重置 ============ */
 function downloadBlob(blob, name){
   const a=document.createElement("a");
   a.href=URL.createObjectURL(blob);
@@ -626,6 +731,28 @@ function downloadBlob(blob, name){
   document.body.appendChild(a); a.click(); a.remove();
   setTimeout(()=>URL.revokeObjectURL(a.href),3000);
 }
+function doExport(){
+  downloadBlob(new Blob([JSON.stringify(state,null,2)],{type:"application/json"}),
+    "黑神话收集进度_"+new Date().toISOString().slice(0,10)+".json");
+  toast("已导出备份");
+}
+document.getElementById("importFile").onchange = e=>{
+  const f = e.target.files[0]; if(!f) return;
+  const r = new FileReader();
+  r.onload = ()=>{ try{
+    const d=normState(JSON.parse(r.result));
+    state=d; save(); renderTabs(); renderList(); toast("导入成功");
+  }catch(err){ toast("导入失败：文件格式错误", true); } };
+  r.readAsText(f);
+  e.target.value="";
+};
+function doReset(){
+  if(confirm("确定清空所有收集进度？此操作不可撤销（建议先导出备份）。")){
+    state={done:{},notes:{},tags:{}}; save(); renderTabs(); renderList(); toast("进度已重置");
+  }
+}
+
+/* 离线存档：把进度烘焙进 HTML 文件本身，双击即记得 */
 document.getElementById("saveHtml").onclick = ()=>{
   if(!confirm(
     "将把当前进度烘焙进一份新的 HTML 文件并下载。\n\n"+
@@ -643,17 +770,29 @@ document.getElementById("saveHtml").onclick = ()=>{
   }
   html = html.replace(anchorRe, '<script id="init-state">window.__INITIAL_STATE__='+data+';<\/script>');
   downloadBlob(new Blob([html],{type:"text/html"}), "黑神话收集_带进度.html");
+  toast("已生成离线存档文件");
 };
+
+/* ============ toast 轻提示 ============ */
+let _toastT=null;
+function toast(msg, isErr){
+  const el=document.getElementById("toast");
+  el.textContent=msg;
+  el.className="toast show"+(isErr?" err":"");
+  clearTimeout(_toastT);
+  _toastT=setTimeout(()=>el.classList.remove("show"), 2600);
+}
+
+/* ============ 筛选联动 ============ */
 document.getElementById("search").oninput = renderList;
 document.getElementById("filter").onchange = renderList;
-document.getElementById("fMiss").onchange = renderList;
-document.getElementById("fNg").onchange = renderList;
+document.getElementById("fMiss").onchange = ()=>{ syncToggle("fMissWrap", document.getElementById("fMiss").checked); renderList(); };
+document.getElementById("fNg").onchange = ()=>{ syncToggle("fNgWrap", document.getElementById("fNg").checked); renderList(); };
+function syncToggle(wrapId, on){ document.getElementById(wrapId).classList.toggle("on", on); }
 
-/* ============ GitHub 云存档（配置已内置，自动保存，日常无需填写） ============ */
-// 部署时烘焙：user/repo/branch 固定；token 由部署者填入「仅此仓库、Contents 读写」的 fine-grained token
+/* ============ GitHub 云同步（token 存本机浏览器，自动保存，日常无需填写） ============ */
 const GH = { user:"zhewenzhang", repo:"wukong-collector", branch:"main", token:"" };
 
-function val(id){ return document.getElementById(id).value.trim(); }
 function b64encode(str){ return btoa(unescape(encodeURIComponent(str))); }
 function b64decode(b64){ return decodeURIComponent(escape(atob(b64.replace(/\s/g,"")))); }
 function setGHStatus(m){ const el=document.getElementById("ghStatus"); if(el) el.textContent=m; }
@@ -662,9 +801,8 @@ function effToken(){
   try{ return (JSON.parse(localStorage.getItem("wukong_gh")||"{}").token)||""; }catch(e){ return ""; }
 }
 
-function autoSaveGH(){ if(_ghLoading||!effToken()) return; clearTimeout(_ghTimer); _ghTimer=setTimeout(()=>saveGH(), 800); }
-
-async function saveGH(){
+async function saveGH(attempt){
+  attempt = attempt || 1;
   const token=effToken();
   if(!token){ setGHStatus("未配置 Token，无法保存到 GitHub"); return; }
   setGHStatus("保存中…");
@@ -678,9 +816,12 @@ async function saveGH(){
     const body={message:"wukong progress update",content:b64encode(JSON.stringify(state)),branch:GH.branch};
     if(sha) body.sha=sha;
     const p=await fetch(url,{method:"PUT",headers:Object.assign({},H,{"Content-Type":"application/json"}),body:JSON.stringify(body)});
-    if(p.ok){ setGHStatus("✅ 已自动保存到 GitHub"); }
-    else{ const e=await p.json().catch(()=>({})); setGHStatus("保存失败: "+(e.message||p.status)); }
-  }catch(err){ setGHStatus("网络错误: "+err.message); }
+    if(p.ok){ setGHStatus("✅ 已自动保存到 GitHub"); toast("已同步到 GitHub"); }
+    else{ const e=await p.json().catch(()=>({})); setGHStatus("保存失败: "+(e.message||p.status)); toast("云同步失败："+(e.message||p.status), true); }
+  }catch(err){
+    if(attempt<2){ return saveGH(attempt+1); }   // 网络抖动自动重试一次
+    setGHStatus("网络错误: "+err.message); toast("云同步失败："+err.message, true);
+  }
 }
 async function loadGH(){
   const token=effToken();
@@ -693,23 +834,29 @@ async function loadGH(){
     if(r.status===404){ setGHStatus("GitHub 上还没有记录，勾选后会自动保存"); return; }
     if(!r.ok){ const e=await r.json().catch(()=>({})); setGHStatus("加载失败: "+(e.message||r.status)); return; }
     const j=await r.json();
-    const d=JSON.parse(b64decode(j.content));
-    if(d&&d.done){ _ghLoading=true; state=d; save(); renderTabs(); renderList(); _ghLoading=false; setGHStatus("✅ 已从 GitHub 加载"); }
-    else setGHStatus("数据格式不对");
+    const d=normState(JSON.parse(b64decode(j.content)));
+    _ghLoading=true; state=d; save(); renderTabs(); renderList(); _ghLoading=false;
+    setGHStatus("✅ 已从 GitHub 加载"); toast("已从 GitHub 加载");
   }catch(err){ setGHStatus("网络错误: "+err.message); }
 }
 document.getElementById("ghBtn").onclick=()=>{
-  setGHStatus(localStorage.getItem("wukong_gh") ? ("已记住配置（"+GH.user+"/"+GH.repo+"），勾选即自动保存") : "首次使用：请粘贴 Token 并点「保存配置并同步」");
+  setGHStatus(localStorage.getItem("wukong_gh") ? ("已记住配置（"+GH.user+"/"+GH.repo+"），勾选即自动保存") : "首次使用：请粘贴 Token 并点「配置并同步」");
   document.getElementById("ghModal").classList.add("on");
 };
 document.getElementById("ghClose").onclick=()=>document.getElementById("ghModal").classList.remove("on");
-document.getElementById("ghSave").onclick=()=>{ const t=val("ghToken"); if(t) localStorage.setItem("wukong_gh",JSON.stringify({token:t})); saveGH(); };
-document.getElementById("ghLoad").onclick=()=>{ const t=val("ghToken"); if(t) localStorage.setItem("wukong_gh",JSON.stringify({token:t})); loadGH(); };
+document.getElementById("ghSave").onclick=()=>{ const t=document.getElementById("ghToken").value.trim(); if(t) localStorage.setItem("wukong_gh",JSON.stringify({token:t})); saveGH(); };
+document.getElementById("ghLoad").onclick=()=>{ const t=document.getElementById("ghToken").value.trim(); if(t) localStorage.setItem("wukong_gh",JSON.stringify({token:t})); loadGH(); };
 
-// 启动自动从 GitHub 拉取最新进度（实现任意设备随时访问）
-if(effToken()){ loadGH(); }
-
-renderTabs(); renderList();
+/* ============ 启动 ============ */
+document.getElementById("ver").textContent = "v"+VERSION;
+document.getElementById("verLine").textContent = "黑神话悟空 · 收集图鉴 v"+VERSION+" · 单文件离线工具";
+try{
+  if(effToken()){ loadGH(); }      // 已配置则启动自动拉取最新进度
+  renderTabs(); renderList();
+}catch(e){
+  console.error("初始化渲染失败：", e);
+  document.getElementById("main").innerHTML = '<div class="empty">页面初始化出错，请刷新重试。如持续异常，可用「导出」备份后重新打开。</div>';
+}
 </script>
 </body>
 </html>
