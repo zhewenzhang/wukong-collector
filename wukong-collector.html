@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>黑神话悟空 · 收集图鉴管理</title>
+<style>
+  :root{
+    --bg:#0e0c0a; --panel:#1a1714; --panel2:#221d18; --line:#3a3026;
+    --gold:#d9a441; --gold-dim:#9c7a32; --txt:#e8dfd0; --txt-dim:#9a8f7e;
+    --green:#6fae5b; --blue:#5b8fc9; --purple:#a06fc9; --red:#c96d5b; --grey:#6b6258;
+    --stat:#e8c06a; --eff:#8fbf9a;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--txt);font-family:"PingFang SC","Microsoft YaHei",system-ui,sans-serif;font-size:14px;}
+  header{padding:16px 20px;border-bottom:1px solid var(--line);background:linear-gradient(180deg,#15110d,#0e0c0a);position:sticky;top:0;z-index:20;}
+  h1{margin:0;font-size:18px;color:var(--gold);letter-spacing:2px;font-weight:600;}
+  h1 small{color:var(--txt-dim);font-size:12px;letter-spacing:0;margin-left:8px;}
+  .total{margin-top:10px;display:flex;align-items:center;gap:12px;}
+  .bar{flex:1;height:10px;background:var(--panel2);border:1px solid var(--line);border-radius:6px;overflow:hidden;}
+  .bar>i{display:block;height:100%;background:linear-gradient(90deg,var(--gold-dim),var(--gold));width:0;transition:width .3s;}
+  .total b{color:var(--gold);font-variant-numeric:tabular-nums;min-width:120px;text-align:right;}
+  .tabs{display:flex;gap:6px;overflow-x:auto;padding:10px 20px 0;border-bottom:1px solid var(--line);background:var(--panel);position:sticky;top:84px;z-index:15;}
+  .tab{flex:none;padding:8px 14px;border:1px solid var(--line);border-bottom:none;border-radius:8px 8px 0 0;background:var(--panel2);color:var(--txt-dim);cursor:pointer;white-space:nowrap;font-size:13px;}
+  .tab.on{background:var(--bg);color:var(--gold);border-color:var(--gold-dim);}
+  .tab .c{font-size:11px;color:var(--txt-dim);margin-left:5px;}
+  .ctrl{display:flex;flex-wrap:wrap;gap:8px;padding:12px 20px;align-items:center;background:var(--panel);}
+  .ctrl input[type=text]{flex:1;min-width:180px;background:var(--panel2);border:1px solid var(--line);color:var(--txt);padding:8px 10px;border-radius:7px;}
+  .ctrl select{background:var(--panel2);border:1px solid var(--line);color:var(--txt);padding:8px 10px;border-radius:7px;}
+  .ctrl label{display:flex;align-items:center;gap:5px;color:var(--txt-dim);font-size:13px;cursor:pointer;user-select:none;}
+  .btn{background:var(--panel2);border:1px solid var(--line);color:var(--txt);padding:8px 12px;border-radius:7px;cursor:pointer;font-size:13px;}
+  .btn:hover{border-color:var(--gold-dim);color:var(--gold);}
+  .btn.danger:hover{border-color:var(--red);color:var(--red);}
+  .btn.primary{background:linear-gradient(180deg,var(--gold),var(--gold-dim));color:#1a140a;border-color:var(--gold);font-weight:600;}
+  .btn.primary:hover{color:#1a140a;filter:brightness(1.08);}
+  main{padding:14px 20px 60px;max-width:1100px;margin:0 auto;}
+  .item{display:flex;align-items:flex-start;gap:10px;padding:9px 10px;border:1px solid var(--line);border-radius:8px;margin-bottom:6px;background:var(--panel);}
+  .item.done{opacity:.55;}
+  .item.done .nm{text-decoration:line-through;color:var(--txt-dim);}
+  .item .chk{width:18px;height:18px;flex:none;margin-top:2px;cursor:pointer;accent-color:var(--gold);}
+  .nm{flex:1;min-width:0;}
+  .nm .title{font-weight:500;}
+  .nm .sub{color:var(--txt-dim);font-size:12px;margin-top:2px;line-height:1.4;}
+  .nm .stat{color:var(--stat);font-size:12px;margin-top:3px;}
+  .nm .eff{color:var(--eff);font-size:12px;margin-top:2px;line-height:1.4;}
+  .q{display:inline-block;font-size:11px;padding:1px 6px;border-radius:4px;margin-right:6px;vertical-align:middle;border:1px solid;}
+  .q.良{color:var(--grey);border-color:var(--grey);}
+  .q.上{color:var(--green);border-color:var(--green);}
+  .q.特{color:var(--blue);border-color:var(--blue);}
+  .q.仙{color:var(--purple);border-color:var(--purple);}
+  .q.神珍{color:var(--gold);border-color:var(--gold);}
+  .tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px;}
+  .tg{font-size:11px;padding:1px 7px;border-radius:10px;background:var(--panel2);border:1px solid var(--line);color:var(--txt-dim);}
+  .tg.易漏{color:var(--red);border-color:var(--red);}
+  .tg.二周目{color:var(--purple);border-color:var(--purple);}
+  .tg.BOSS{color:var(--blue);border-color:var(--blue);}
+  .ops{flex:none;display:flex;flex-direction:column;gap:5px;align-items:flex-end;}
+  .mini{font-size:12px;color:var(--txt-dim);cursor:pointer;background:none;border:1px solid var(--line);border-radius:6px;padding:3px 8px;}
+  .mini:hover{color:var(--gold);border-color:var(--gold-dim);}
+  .empty{color:var(--txt-dim);text-align:center;padding:40px;}
+  .note-edit{width:100%;background:var(--panel2);border:1px solid var(--line);color:var(--txt);border-radius:6px;padding:6px;font-size:12px;margin-top:6px;font-family:inherit;}
+  .modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;z-index:50;}
+  .modal.on{display:flex;}
+  .mbox{background:var(--panel);border:1px solid var(--gold-dim);border-radius:12px;padding:18px;width:320px;max-width:90vw;}
+  .mbox h3{margin:0 0 12px;color:var(--gold);font-size:15px;}
+  .mbox .chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;}
+  .mbox .chips span{padding:4px 10px;border:1px solid var(--line);border-radius:14px;cursor:pointer;font-size:13px;}
+  .mbox .chips span.on{background:var(--gold);color:#000;border-color:var(--gold);}
+  .mbox input{width:100%;background:var(--panel2);border:1px solid var(--line);color:var(--txt);padding:8px;border-radius:7px;margin-bottom:12px;}
+  .mbox .row{display:flex;gap:8px;justify-content:flex-end;}
+  .mbox .gh-lab{display:block;color:var(--txt-dim);font-size:12px;margin:8px 0 3px;}
+  .mbox .gh-help{color:var(--txt-dim);font-size:12px;line-height:1.5;margin:6px 0 0;}
+  .mbox .gh-help code{background:var(--panel2);padding:1px 5px;border-radius:4px;color:var(--gold);}
+  .mbox .gh-status{color:var(--gold);font-size:12px;min-height:16px;margin:10px 0 0;}
+  footer{text-align:center;color:var(--txt-dim);font-size:12px;padding:20px;}
+  a{color:var(--gold);}
+</style>
+</head>
+<body>
+<header>
+  <h1>黑神话悟空 · 收集图鉴<small>勾选即收藏 · 数据存本地浏览器</small></h1>
+  <div class="total">
+    <div class="bar"><i id="bar"></i></div>
+    <b id="totalTxt">0 / 0 (0%)</b>
+  </div>
+</header>
+
+<div class="tabs" id="tabs"></div>
+
+<div class="ctrl">
+  <input type="text" id="search" placeholder="搜索名称 / 属性 / 效果 / 备注 / 标签…">
+  <select id="filter">
+    <option value="all">全部</option>
+    <option value="todo">仅未收集</option>
+    <option value="done">仅已收集</option>
+  </select>
+  <label><input type="checkbox" id="fMiss"> 易漏优先</label>
+  <label><input type="checkbox" id="fNg"> 仅二周目</label>
+  <button class="btn primary" id="saveHtml">💾 保存离线存档</button>
+  <button class="btn" id="ghBtn">☁ GitHub 存档</button>
+  <button class="btn" id="export">导出</button>
+  <button class="btn" id="importBtn">导入</button>
+  <button class="btn danger" id="reset">重置进度</button>
+  <input type="file" id="importFile" accept=".json" style="display:none">
+</div>
+
+<main id="main"></main>
+
+<footer>
+  属性/效果数据基于公开攻略整理（萌娘百科 / B站 wiki / 游民星空等）。数值为游戏内参考值，披挂防御取神珍品质、武器取基础攻击，套装详细效果与部分独门妙用请以游戏内图鉴为准。
+  工具内可随时手动增删、改备注。<b>进度持久化三选一</b>：①「💾 保存离线存档」生成带进度的单文件，双击即记得；②「☁ GitHub 存档」把进度推到仓库 <code>state.json</code>，任意设备打开即同步；③「导出」存 JSON 备份。localStorage 仅作同文件内的辅助，预览面板 / 隐私模式下会失效。
+</footer>
+
+<div class="modal" id="modal">
+  <div class="mbox">
+    <h3 id="modalTitle">打标签</h3>
+    <div class="chips" id="presetChips"></div>
+    <input type="text" id="customTag" placeholder="自定义标签，回车添加">
+    <div class="row">
+      <button class="btn" id="modalCancel">取消</button>
+      <button class="btn" id="modalOk" style="border-color:var(--gold-dim);color:var(--gold)">保存</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="ghModal">
+  <div class="mbox" style="width:360px">
+    <h3>☁ GitHub 云存档</h3>
+    <label class="gh-lab">用户名 / 组织</label>
+    <input type="text" id="ghUser" placeholder="你的 GitHub 用户名" value="zhewenzhang">
+    <label class="gh-lab">仓库名</label>
+    <input type="text" id="ghRepo" placeholder="例如 wukong-collector" value="wukong-collector">
+    <label class="gh-lab">分支</label>
+    <input type="text" id="ghBranch" placeholder="main" value="main">
+    <label class="gh-lab">Personal Access Token</label>
+    <input type="password" id="ghToken" placeholder="ghp_... 或 fine-grained token">
+    <p class="gh-help">把进度存到仓库的 <code>state.json</code>，任意设备打开本页即可读取。Token 仅存本机浏览器，<b>不会</b>写入网页源码。建议用 private 仓库 + 仅 Contents 写权限的 fine-grained token。</p>
+    <div class="row">
+      <button class="btn" id="ghClose">关闭</button>
+      <button class="btn" id="ghLoad">从 GitHub 加载</button>
+      <button class="btn primary" id="ghSave">保存到 GitHub</button>
+    </div>
+    <p class="gh-status" id="ghStatus"></p>
+  </div>
+</div>
+
+<script id="init-state">window.__INITIAL_STATE__=null;</script>
+
+<script>
+/* ============ 数据：黑神话悟空收集图鉴 ============
+   字段: n=名称, q=品质, s=获取/备注, t=预设标签(易漏/二周目/BOSS)
+        stat=属性加成(攻击/防御/暴击/耐性等), effect=特性/效果/套装效果
+   武器/珍玩/泡酒物/种子数据较完整；披挂填套装归属+神珍防御+独门妙用；丹方填炼制丹药；材料留空。 */
+const GROUPS = [
+  { id:"weapon", name:"武器", items:[
+    {n:"如意金箍棒",q:"神珍",s:"花果山主线流程获取",t:["BOSS"],stat:"攻击135 / 暴击6%",effect:"独门妙用：第四段棍势可永久维持，不再随时间减削"},
+    {n:"三尖两刃枪",q:"神珍",s:"梅山击败二郎神",t:["BOSS"],stat:"攻击135 / 暴击6%",effect:"独门妙用：轻棍融入枪术+增戳棍伤害；打出进尺射出飞剑"},
+    {n:"狼牙棒",q:"仙",s:"击败黄眉大王",t:["BOSS"],stat:"攻击80 / 法力上限30",effect:"独门妙用：识破后短时间不断获得棍势"},
+    {n:"楮白枪",q:"特",s:"小张太子支线",t:["BOSS"],stat:"攻击75",effect:"独门妙用：轻棍融入枪术+增戳棍伤害"},
+    {n:"铜云棒",q:"良",s:"豪华版奖励（不计成就）",t:[],stat:"攻击36 / 暴击2%",effect:"特性：棍势消耗降低"},
+    {n:"柳木棍",q:"良",s:"出身自带",t:[],stat:"攻击30",effect:""},
+    {n:"兽棍·熊罴",q:"上",s:"黑熊精 / 烈火乌金",t:["BOSS"],stat:"攻击50 / 暴击4%",effect:"独门妙用：增聚形散气破隐一击暴击率"},
+    {n:"兽棍·貂鼠",q:"特",s:"黄风大圣 / 神风玛瑙",t:["BOSS"],stat:"攻击66 / 暴击7%",effect:"独门妙用：轻棍第四式·棍花移步舞风沙增范围伤害"},
+    {n:"兽棍·金睛",q:"仙",s:"碧水金睛兽 / 金睛兽嚼",t:["BOSS"],stat:"攻击105 / 暴击10%",effect:""},
+    {n:"鳞棍·双蛇",q:"上",s:"白衣秀士 / 玉垂牙",t:["BOSS"],stat:"攻击40",effect:"独门妙用：增轻棍终结技伤害；水中打斗效果大增"},
+    {n:"鳞棍·蟠龙",q:"特",s:"赤髯龙+小骊龙 / 掣电尾+振雷骨",t:["BOSS"],stat:"攻击70",effect:"独门妙用：增所有立棍招式伤害"},
+    {n:"鳞棍·亢金",q:"特",s:"亢金龙 / 银星雾角",t:["BOSS"],stat:"攻击70 / 暴击6%",effect:"独门妙用：捣蒜打替换为雷电伤害，令对手积累雷蛰"},
+    {n:"飞龙宝杖",q:"仙",s:"青背龙+小黄龙 / 摇山爪+架海筋",t:["BOSS"],stat:"攻击108",effect:"独门妙用：增立棍伤害；三/四段蓄力立棍引天龙劈落雷"},
+    {n:"天龙棍",q:"神珍",s:"二周目 / 龙珠×9",t:["二周目","BOSS"],stat:"攻击140 / 暴击9%",effect:"独门妙用：蓄力引雷上身；雷蛰状态所有棍法附加赋雷伤害"},
+    {n:"出云棍",q:"上",s:"石先锋 / 铁石心",t:["BOSS"],stat:"攻击60 / 防御30",effect:"独门妙用：增蓄力劈棍伤害"},
+    {n:"业火杖",q:"仙",s:"雾里云·云里雾 / 业火晶",t:["BOSS"],stat:"攻击100 / 防御40 / 火焚耐性10",effect:"独门妙用：三/四段蓄力劈棍造成地面熔岩爆裂"},
+    {n:"混铁棍",q:"神珍",s:"碧水洞通关 / 大力铁角",t:["BOSS"],stat:"攻击110 / 火焚耐性5 / 寒冻耐性5",effect:"独门妙用：按防御一定比例增攻击伤害"},
+    {n:"几丁棍",q:"特",s:"二姐 / 青丝刺",t:["BOSS"],stat:"攻击80 / 暴击5%",effect:"独门妙用：蓄力命中每耗一段棍势回微生命"},
+    {n:"昆棍·蛛仙",q:"仙",s:"紫蛛儿 / 连理肢",t:["BOSS"],stat:"攻击85 / 暴击12%",effect:"独门妙用：蓄力命中回生命；自身毒伤时令对手积累毒伤"},
+    {n:"昆棍·百眼",q:"仙",s:"百眼魔君 / 金光眼眸",t:["BOSS"],stat:"攻击90 / 暴击10%",effect:"独门妙用：蓄力命中回生命；对手毒伤时回血大增"},
+    {n:"昆棍·通天",q:"神珍",s:"二周目 / 通天角",t:["二周目","BOSS"],stat:"攻击120 / 暴击25%",effect:"独门妙用：蓄力命中回生命并爆发尖刺伤害周遭"}
+  ]},
+  { id:"head", name:"披挂·头冠", items:[
+    {n:"凤翅紫金冠",q:"神珍",s:"套装升阶",t:[],stat:"防御(神珍)见游戏内",effect:"套装·大圣套：心灵福至——按根器天赋解锁数提升防御"},
+    {n:"大力王面",q:"神珍",s:"套装升阶",t:[],stat:"防御(神珍)见游戏内",effect:"套装·大力套（套装效果见游戏内）"},
+    {n:"厌火夜叉面",q:"仙",s:"套装升阶",t:[],stat:"防御(神珍)见游戏内",effect:"套装·厌火套（套装效果见游戏内）"},
+    {n:"玄铁双角盔",q:"仙",s:"需先击败特定妖王取兵器专材方可铸造",t:["BOSS"],stat:"防御(神珍)见游戏内",effect:"套装·玄铁套（套装效果见游戏内）"},
+    {n:"不净残面",q:"仙",s:"套装升阶",t:[],stat:"防御(神珍)见游戏内",effect:"套装·不净套（套装效果见游戏内）"},
+    {n:"羽士云笠",q:"仙",s:"套装升阶",t:[],stat:"防御(神珍)见游戏内",effect:"套装·羽士套（套装效果见游戏内）"},
+    {n:"金身怒目面",q:"仙",s:"套装升阶",t:[],stat:"防御(神珍)见游戏内",effect:"套装·金身套（套装效果见游戏内）"},
+    {n:"藏风兽面",q:"特",s:"套装升阶",t:[],stat:"防御(神珍)见游戏内",effect:"套装·藏风套（套装效果见游戏内）"},
+    {n:"昆蚑佛笠",q:"特",s:"套装升阶",t:[],stat:"防御(神珍)见游戏内",effect:"套装·昆蚑套（套装效果见游戏内）"},
+    {n:"青铜猴面",q:"上",s:"套装升阶",t:[],stat:"防御(神珍)见游戏内",effect:"套装·青铜套（套装效果见游戏内）"},
+    {n:"行者戒箍",q:"上",s:"套装升阶",t:[],stat:"防御(神珍)见游戏内",effect:"套装·行者套（套装效果见游戏内）"},
+    {n:"百戏傩面",q:"神珍",s:"豪华版套装",t:[],stat:"防御(神珍)见游戏内",effect:"套装·百戏套（套装效果见游戏内）"},
+    {n:"地灵伞盖",q:"特",s:"击败九叶灵芝精",t:["BOSS"],stat:"防御(神珍)见游戏内",effect:"独门妙用见游戏内图鉴"},
+    {n:"鳖宝头骨",q:"特",s:"小西天/火焰山刷鳖宝概率掉落",t:["易漏","BOSS"],stat:"防御(神珍)见游戏内",effect:"独门妙用：增所有跳跃攻击伤害（常作龙鳞/锦鳞套头冠）"},
+    {n:"长须头面",q:"特",s:"盘丝洞花间桥刷蜢虫精概率掉落",t:["易漏"],stat:"防御(神珍)见游戏内",effect:"独门妙用：增所有跳跃攻击造成的伤害"},
+    {n:"闭眼禅",q:"特",s:"雷音寺刷红衣盲僧概率掉落",t:["易漏"],stat:"防御(神珍)见游戏内",effect:"独门妙用见游戏内图鉴（与清虚道果闪避流契合）"},
+    {n:"长嘴脸",q:"上",s:"黄衣员外支线",t:[],stat:"防御17",effect:"独门妙用：饮酒后短时增伤；久不饮酒则反之"},
+    {n:"白脸子",q:"上",s:"击败灵虚子",t:["BOSS"],stat:"防御(神珍)见游戏内",effect:"独门妙用：汲取鬼火后长时增生命与法力上限"},
+    {n:"凤翅紫金冠(凡品)",q:"良",s:"初始低阶形态",t:[],stat:"防御20",effect:"凡品大圣套：心灵福至"}
+  ]},
+  { id:"body", name:"披挂·衣甲", items:[
+    {n:"锁子黄金甲",q:"神珍",s:"套装升阶",t:[],stat:"防御120",effect:"套装·大圣套：心灵福至——按根器天赋解锁数提升防御"},
+    {n:"大力山文甲",q:"神珍",s:"套装升阶",t:[],stat:"防御160",effect:"套装·大力套（套装效果见游戏内）"},
+    {n:"厌火绣衫",q:"仙",s:"套装升阶",t:[],stat:"防御110 / 火焚耐性6",effect:"套装·厌火套（套装效果见游戏内）"},
+    {n:"玄铁征袍铠",q:"仙",s:"套装升阶",t:[],stat:"防御112",effect:"套装·玄铁套（套装效果见游戏内）"},
+    {n:"不净盘龙甲",q:"仙",s:"套装升阶",t:[],stat:"防御116",effect:"套装·不净套（套装效果见游戏内）"},
+    {n:"羽士戗金甲",q:"仙",s:"套装升阶",t:[],stat:"防御113",effect:"套装·羽士套（套装效果见游戏内）"},
+    {n:"金身绣衫",q:"仙",s:"套装升阶",t:[],stat:"防御112",effect:"套装·金身套（套装效果见游戏内）"},
+    {n:"龙鳞战袍",q:"特",s:"套装升阶",t:[],stat:"防御119 / 雷蛰耐性12(满级)",effect:"套装·龙鳞套：3件减雷蛰维持+增赋雷伤；整套增赋雷伤害"},
+    {n:"赭黄战袍",q:"特",s:"套装升阶",t:[],stat:"防御120",effect:"套装·赭黄套（套装效果见游戏内）"},
+    {n:"藏风兽吞铠",q:"特",s:"套装升阶",t:[],stat:"防御122 / 雷蛰耐性7(满级)",effect:"套装·藏风套（套装效果见游戏内）"},
+    {n:"昆蚑毒敌甲",q:"特",s:"需先击败毒敌大王取兵器专材方可铸造",t:["BOSS"],stat:"防御112 / 毒伤耐性8(满级)",effect:"套装·昆蚑套（套装效果见游戏内）"},
+    {n:"乌金皂罗袍",q:"上",s:"套装升阶",t:[],stat:"防御120",effect:"套装·乌金套（套装效果见游戏内）"},
+    {n:"锦鳞战袍",q:"上",s:"套装升阶",t:[],stat:"防御116 / 毒伤耐性18(满级)",effect:"套装·锦鳞套：3件水中大减气力消耗；整套水中大增轻棍终结伤害"},
+    {n:"青铜锦征袍",q:"上",s:"套装升阶",t:[],stat:"防御112",effect:"套装·青铜套（套装效果见游戏内）"},
+    {n:"行者直裰",q:"上",s:"套装升阶",t:[],stat:"防御120",effect:"套装·行者套（套装效果见游戏内）"},
+    {n:"百戏衬钱衣",q:"神珍",s:"豪华版套装",t:[],stat:"防御104",effect:"套装·百戏套（套装效果见游戏内）"},
+    {n:"阴阳法衣",q:"仙",s:"击败火焰山土地",t:["BOSS"],stat:"防御36",effect:"孤品：独门妙用见游戏内图鉴"},
+    {n:"山珍蓑衣",q:"特",s:"极乐谷罪业塔林大人参精必掉",t:["BOSS"],stat:"防御48 / 寒冻耐性8",effect:"孤品：独门妙用：饮酒后短时增气力上限"},
+    {n:"锁子黄金甲(凡品)",q:"良",s:"初始低阶形态",t:[],stat:"防御40",effect:"凡品大圣套：心灵福至"},
+    {n:"虎皮裙",q:"良",s:"初始低阶形态",t:[],stat:"防御5",effect:"孤品：初始低阶"}
+  ]},
+  { id:"arm", name:"披挂·臂甲", items:[
+    {n:"点翠飞龙釺",q:"神珍",s:"套装升阶",t:[],stat:"防御(神珍)见游戏内",effect:"套装·大圣套：心灵福至"},
+    {n:"大力臂甲",q:"神珍",s:"套装升阶",t:[],stat:"防御(神珍)见游戏内",effect:"套装·大力套（套装效果见游戏内）"},
+    {n:"厌火魔手",q:"仙",s:"套装升阶",t:[],stat:"防御(神珍)见游戏内",effect:"套装·厌火套（套装效果见游戏内）"},
+    {n:"玄铁硬手",q:"仙",s:"套装升阶",t:[],stat:"防御(神珍)见游戏内",effect:"套装·玄铁套（套装效果见游戏内）"},
+    {n:"不净护釺",q:"仙",s:"套装升阶",t:[],stat:"防御(神珍)见游戏内",effect:"套装·不净套（套装效果见游戏内）"},
+    {n:"羽士刺釺",q:"仙",s:"套装升阶",t:[],stat:"防御(神珍)见游戏内",effect:"套装·羽士套（套装效果见游戏内）"},
+    {n:"金身护臂",q:"仙",s:"套装升阶",t:[],stat:"防御(神珍)见游戏内",effect:"套装·金身套（套装效果见游戏内）"},
+    {n:"龙鳞臂甲",q:"特",s:"套装升阶",t:[],stat:"防御47 / 雷蛰耐性7(满级)",effect:"套装·龙鳞套：增赋雷攻击伤害"},
+    {n:"赭黄臂甲",q:"特",s:"套装升阶",t:[],stat:"防御(神珍)见游戏内",effect:"套装·赭黄套（套装效果见游戏内）"},
+    {n:"藏风护臂",q:"特",s:"套装升阶",t:[],stat:"防御(神珍)见游戏内",effect:"套装·藏风套（套装效果见游戏内）"},
+    {n:"昆蚑刺手",q:"特",s:"套装升阶",t:[],stat:"防御(神珍)见游戏内",effect:"套装·昆蚑套（套装效果见游戏内）"},
+    {n:"乌金臂鞲",q:"上",s:"套装升阶",t:[],stat:"防御(神珍)见游戏内",effect:"套装·乌金套（套装效果见游戏内）"},
+    {n:"锦鳞护臂",q:"上",s:"套装升阶",t:[],stat:"防御45 / 毒伤耐性8(满级)",effect:"套装·锦鳞套：水中大减气力消耗"},
+    {n:"青铜臂鞲",q:"上",s:"套装升阶",t:[],stat:"防御(神珍)见游戏内",effect:"套装·青铜套（套装效果见游戏内）"},
+    {n:"行者扎腕",q:"上",s:"套装升阶",t:[],stat:"防御(神珍)见游戏内",effect:"套装·行者套（套装效果见游戏内）"},
+    {n:"百戏护手",q:"神珍",s:"豪华版套装",t:[],stat:"防御(神珍)见游戏内",effect:"套装·百戏套（套装效果见游戏内）"},
+    {n:"下毒手",q:"特",s:"盘丝洞碎玉池初见黑手道人断其四臂",t:[],stat:"防御(神珍)见游戏内",effect:"独门妙用见游戏内图鉴"},
+    {n:"南海念珠",q:"特",s:"旧观音禅院正殿土地庙院内宝箱",t:[],stat:"防御(神珍)见游戏内",effect:"独门妙用：汲取鬼火后长时增生命与法力上限"},
+    {n:"金刚护臂",q:"特",s:"雷音寺寺门刷断臂金刚概率掉落",t:["易漏"],stat:"防御(神珍)见游戏内",effect:"独门妙用见游戏内图鉴"},
+    {n:"点翠飞龙釺(凡品)",q:"良",s:"初始低阶形态",t:[],stat:"防御16",effect:"凡品大圣套：心灵福至"},
+    {n:"绵布扎腕",q:"良",s:"初始低阶形态",t:[],stat:"防御2",effect:"孤品：初始低阶"}
+  ]},
+  { id:"leg", name:"披挂·腿甲", items:[
+    {n:"藕丝步云履",q:"神珍",s:"套装升阶",t:[],stat:"防御72 / 气力上限30",effect:"套装·大圣套：心灵福至"},
+    {n:"大力胫甲",q:"神珍",s:"套装升阶",t:[],stat:"防御96 / 寒冻耐性4 / 火焚耐性4",effect:"套装·大力套（套装效果见游戏内）"},
+    {n:"羽士护腿",q:"仙",s:"套装升阶",t:[],stat:"防御68 / 毒伤耐性4",effect:"套装·羽士套（套装效果见游戏内）"},
+    {n:"昆蚑刺足",q:"特",s:"套装升阶",t:[],stat:"防御(神珍)见游戏内",effect:"套装·昆蚑套（套装效果见游戏内）"},
+    {n:"厌火魔足",q:"仙",s:"套装升阶",t:[],stat:"防御66",effect:"套装·厌火套（套装效果见游戏内）"},
+    {n:"玄铁硬足",q:"仙",s:"套装升阶",t:[],stat:"防御67",effect:"套装·玄铁套（套装效果见游戏内）"},
+    {n:"不净泥足",q:"仙",s:"套装升阶",t:[],stat:"防御(神珍)见游戏内",effect:"套装·不净套（套装效果见游戏内）"},
+    {n:"金身护腿",q:"仙",s:"套装升阶",t:[],stat:"防御67 / 寒冻耐性5",effect:"套装·金身套（套装效果见游戏内）"},
+    {n:"龙鳞胫甲",q:"特",s:"套装升阶",t:[],stat:"防御71 / 雷蛰耐性5(满级)",effect:"套装·龙鳞套：增赋雷攻击伤害"},
+    {n:"赭黄胫甲",q:"特",s:"套装升阶",t:[],stat:"防御(神珍)见游戏内",effect:"套装·赭黄套（套装效果见游戏内）"},
+    {n:"青铜吊腿",q:"上",s:"套装升阶",t:[],stat:"防御(神珍)见游戏内",effect:"套装·青铜套（套装效果见游戏内）"},
+    {n:"藏风护腿",q:"特",s:"套装升阶",t:[],stat:"防御(神珍)见游戏内",effect:"套装·藏风套（套装效果见游戏内）"},
+    {n:"乌金行缠",q:"上",s:"套装升阶",t:[],stat:"防御(神珍)见游戏内",effect:"套装·乌金套（套装效果见游戏内）"},
+    {n:"锦鳞行缠",q:"上",s:"套装升阶",t:[],stat:"防御70 / 毒伤耐性6",effect:"套装·锦鳞套：水中大减气力消耗"},
+    {n:"行者腿绷",q:"上",s:"套装升阶",t:[],stat:"防御(神珍)见游戏内",effect:"套装·行者套（套装效果见游戏内）"},
+    {n:"藕丝步云履(凡品)",q:"良",s:"初始低阶形态",t:[],stat:"防御24",effect:"凡品大圣套：心灵福至"},
+    {n:"绵布腿绷",q:"良",s:"初始低阶形态",t:[],stat:"防御(神珍)见游戏内",effect:"孤品：初始低阶"}
+  ]},
+  { id:"relic", name:"珍玩", items:[
+    {n:"风铎",q:"上",s:"豪华版奖励",t:[],stat:"",effect:"增移动速度"},
+    {n:"猫睛宝串",q:"上",s:"击败幽魂",t:["BOSS"],stat:"",effect:"增暴击率(+3%)"},
+    {n:"玛瑙罐",q:"上",s:"黑风洞宝箱",t:[],stat:"",effect:"增防御(+14)"},
+    {n:"不求人",q:"上",s:"二回后土地庙购买",t:[],stat:"",effect:"增气力上限"},
+    {n:"博山炉",q:"上",s:"赤髯龙宝箱",t:["BOSS"],stat:"",effect:"饮尽葫芦后获伤害减免"},
+    {n:"金花玉萼",q:"特",s:"石中人处购买",t:[],stat:"",effect:"增打杀对手所得灵蕴"},
+    {n:"砗磲佩",q:"上",s:"小骊龙宝箱",t:["BOSS"],stat:"",effect:"减所有法术回转时间(CD)"},
+    {n:"琉璃舍利瓶",q:"上",s:"定风庄宝箱",t:[],stat:"",effect:"闪身时恢复少许气力"},
+    {n:"虎头牌",q:"上",s:"隐·斯哈里国击败虎先锋",t:["BOSS"],stat:"",effect:"连续命中短时增攻击伤害"},
+    {n:"金色鲤",q:"",s:"",stat:"",effect:"效果见游戏内图鉴（与水火系相关）"},
+    {n:"未来珠",q:"",s:"",stat:"",effect:"效果见游戏内图鉴"},
+    {n:"月玉兔",q:"",s:"",stat:"",effect:"增减伤（与日金乌联动）"},
+    {n:"日金乌",q:"",s:"",stat:"",effect:"增伤害（与月玉兔联动）"},
+    {n:"白狐毫",q:"上",s:"白狐支线",t:[],stat:"",effect:"增变身维持时间"},
+    {n:"君子牌",q:"",s:"",stat:"",effect:"增神力恢复速度"},
+    {n:"定颜珠",q:"",s:"",stat:"",effect:"效果见游戏内图鉴"},
+    {n:"水火篮",q:"",s:"",stat:"",effect:"增火/寒属性变身攻击力"},
+    {n:"辟水珠",q:"",s:"",stat:"",effect:"水中增防御"},
+    {n:"琥珀念珠",q:"",s:"",stat:"",effect:"增棍势积攒速度"},
+    {n:"阳燧珠",q:"",s:"",stat:"",effect:"增火焚耐性"},
+    {n:"金棕衣",q:"",s:"",stat:"",effect:"荆棘甲：增防御并反伤周围对手"},
+    {n:"摩尼珠",q:"上",s:"刷雪僵尸概率掉",t:["易漏"],stat:"",effect:"陷入寒冻后短时增暴击率"},
+    {n:"三清令",q:"",s:"",stat:"",effect:"生命不足时增暴击率"},
+    {n:"金钮",q:"",s:"",stat:"",effect:"生命饱满时大幅提升伤害"},
+    {n:"耐雪枝",q:"上",s:"击败魔将·莲眼",t:["BOSS"],stat:"",effect:"增寒冻耐性"},
+    {n:"雷榍",q:"",s:"",stat:"",effect:"增雷蛰耐性"},
+    {n:"错金银带钩",q:"",s:"",stat:"",effect:"增毒伤耐性"},
+    {n:"雷火印",q:"",s:"",stat:"",effect:"增法力上限"},
+    {n:"兽与佛",q:"",s:"",stat:"",effect:"增暴击伤害"},
+    {n:"铜佛坠",q:"",s:"",stat:"",effect:"增四灾耐性"},
+    {n:"白贝腰链",q:"",s:"",stat:"",effect:"微增攻击伤害"},
+    {n:"细磁茶盂",q:"上",s:"",stat:"",effect:"增气力恢复速度"},
+    {n:"卵中骨",q:"",s:"",stat:"",effect:"增赋毒伤害"},
+    {n:"仙胞石片",q:"",s:"",stat:"",effect:"效果见游戏内图鉴"},
+    {n:"虎筋绦子",q:"",s:"",stat:"",effect:"效果见游戏内图鉴"},
+    {n:"仙箓",q:"",s:"",stat:"",effect:"效果见游戏内图鉴"},
+    {n:"吉祥灯",q:"",s:"击败魔将·妙音前清完9掌灯狱使",t:["易漏"],stat:"",effect:"聚形散气触发魔音，增伤但降生命上限（极易漏）"}
+  ]},
+  { id:"gourd", name:"葫芦·酒", items:[
+    {n:"玉观音葫芦",q:"",s:"参考：初始葫芦",t:["参考"],stat:"",effect:"容器：影响酒量与饮用量"},
+    {n:"湘妃葫芦",q:"",s:"参考",t:["参考"],stat:"",effect:"容器"},
+    {n:"双冠葫芦",q:"",s:"参考",t:["参考"],stat:"",effect:"容器"},
+    {n:"清虚葫芦",q:"",s:"参考",t:["参考"],stat:"",effect:"容器"},
+    {n:"妙仙葫芦",q:"",s:"参考",t:["参考"],stat:"",effect:"容器"},
+    {n:"燃葫芦",q:"",s:"参考",t:["参考"],stat:"",effect:"容器"},
+    {n:"彩玉葫芦",q:"",s:"参考",t:["参考"],stat:"",effect:"容器"},
+    {n:"金丹葫芦",q:"",s:"参考",t:["参考"],stat:"",effect:"容器"},
+    {n:"乾坤彩葫芦",q:"",s:"参考",t:["参考"],stat:"",effect:"容器"},
+    {n:"天官赐福葫芦",q:"",s:"参考/二周目",t:["参考","二周目"],stat:"",effect:"容器"},
+    {n:"椰子酒",q:"",s:"主线必得",t:[],stat:"",effect:"饮酒恢复"},
+    {n:"松醪",q:"",s:"申猴处购买",t:[],stat:"",effect:"四口得近三段棍势"},
+    {n:"羔儿酿",q:"",s:"参考",t:["参考"],stat:"",effect:"饮酒恢复"},
+    {n:"蓝桥风月",q:"",s:"参考",t:["参考"],stat:"",effect:"饮酒恢复"},
+    {n:"琼浆",q:"",s:"参考",t:["参考"],stat:"",effect:"每口回20法力"},
+    {n:"蜂山酒",q:"",s:"参考",t:["参考"],stat:"",effect:"饮酒恢复"},
+    {n:"九秋菊",q:"",s:"参考",t:["参考"],stat:"",effect:"饮酒恢复"},
+    {n:"惠滋",q:"",s:"参考",t:["参考"],stat:"",effect:"饮酒恢复"},
+    {n:"棕竹",q:"",s:"参考",t:["参考"],stat:"",effect:"饮酒恢复"},
+    {n:"甘宇",q:"",s:"参考",t:["参考"],stat:"",effect:"饮酒恢复"},
+    {n:"龙膏",q:"",s:"参考",t:["参考"],stat:"",effect:"增下次攻击伤害约10%"},
+    {n:"无忧酒",q:"",s:"参考",t:["参考"],stat:"",effect:"饮酒恢复"}
+  ]},
+  { id:"soak", name:"泡酒物", items:[
+    {n:"百花蕤",q:"",s:"第六回后申猴购买",t:[],stat:"",effect:"消除所有异常状态"},
+    {n:"净瓶柳叶",q:"",s:"二周目申猴购买",t:["二周目"],stat:"",effect:"打斗还魂后恢复葫芦饮过的酒量"},
+    {n:"龟泪",q:"",s:"第三回苦海北岸拾取（易错过）",t:["易漏"],stat:"",effect:"生命全满时饮酒回少量法力"},
+    {n:"困龙须",q:"",s:"第三回照鉴湖宝箱",t:[],stat:"",effect:"延长下次定身法持续时间"},
+    {n:"血杞子",q:"",s:"第四回盘丝岭房內",t:[],stat:"",effect:"延长下次安身法持续时间"},
+    {n:"十二重楼胶",q:"",s:"第三回龟岛青背龙宝箱",t:["BOSS"],stat:"",effect:"增破隐一击伤害(约20%)"},
+    {n:"铜丸",q:"",s:"第二回定风桥宝箱",t:[],stat:"",effect:"下次铜头铁臂不耗法力"},
+    {n:"灵台药苗",q:"",s:"第五回春秋寨亭子",t:[],stat:"",effect:"延长身外化身毛猴维持时间"},
+    {n:"瞌睡虫蜕",q:"",s:"第五回翠云殿宝箱",t:[],stat:"",effect:"减法术CD但行走艰难"},
+    {n:"蕙性兰",q:"",s:"所有种子交辰龙后获得",t:[],stat:"",effect:"饮酒后缓回生命"},
+    {n:"瑶池莲子",q:"",s:"申猴处购买",t:[],stat:"",effect:"短时缓回生命"},
+    {n:"不老藤",q:"",s:"第四回隐紫云山击败青冉冉概率掉",t:["易漏","BOSS"],stat:"",effect:"回大量气力+增气力恢复速度"},
+    {n:"虎舍利",q:"",s:"第二回卧虎寺宝箱",t:[],stat:"",effect:"增暴击率(+5%)"},
+    {n:"梭罗琼芽",q:"",s:"第二回村口宝箱",t:[],stat:"",effect:"增伤害减免(约10%)"},
+    {n:"倒马毒钩",q:"",s:"第四回隐紫云山击败毒敌大王",t:["BOSS"],stat:"",effect:"饮酒后自身中毒（配毒伤流）"},
+    {n:"紫纹缃核",q:"",s:"第四回花间桥灯笼门宝箱",t:[],stat:"",effect:"生命危急时饮酒大增回复量"},
+    {n:"蜂山石髓",q:"",s:"第四回黄花观山道宝箱",t:[],stat:"",effect:"饮酒约15%概率不耗酒量"},
+    {n:"铁弹",q:"",s:"第二回石中人处购买",t:[],stat:"",effect:"饮酒不被打断+减伤(约30%)"},
+    {n:"清虚道果",q:"",s:"第四回击败黄衣道士概率掉",t:["易漏"],stat:"",effect:"延长闪避无敌时间"},
+    {n:"双冠血",q:"",s:"第四回隐紫云山击败晦月魔君",t:["BOSS"],stat:"",effect:"毒伤时饮酒解毒+增移速暴击(+5%)"},
+    {n:"嫩玉藕",q:"",s:"采集碧藕概率获得",t:["易漏"],stat:"",effect:"饮酒后增防御(+15)"},
+    {n:"铁骨银参",q:"",s:"采集老山参概率获得",t:["易漏"],stat:"",effect:"饮酒立即得棍势(约2/7段)"},
+    {n:"青山骨",q:"",s:"采集甘草概率获得",t:["易漏"],stat:"",effect:"饮酒后增生命上限(+30)"},
+    {n:"胆中珠",q:"",s:"初见申猴帮助后获得",t:[],stat:"",effect:"增毒伤耐性(+15)"},
+    {n:"霹雳角",q:"",s:"申猴处购买",t:[],stat:"",effect:"增雷蛰耐性(+15)"},
+    {n:"甜雪",q:"",s:"第三回小雷音寺亭子",t:[],stat:"",effect:"增寒冻耐性(+15)"},
+    {n:"火焰丹头",q:"",s:"第五回击败火烈烈概率掉",t:["易漏","BOSS"],stat:"",effect:"增火焚耐性(+15)"}
+  ]},
+  { id:"seed", name:"种子", items:[
+    {n:"碧藕种子",q:"",s:"前三关采碧藕概率掉",t:[],stat:"",effect:"种出：碧藕"},
+    {n:"甘草种子",q:"",s:"黄风岭采甘草概率掉",t:[],stat:"",effect:"种出：甘草"},
+    {n:"漱玉花种子",q:"",s:"黄风岭采漱玉花概率掉",t:[],stat:"",effect:"种出：漱玉花"},
+    {n:"火铃草种子",q:"",s:"黄风岭采火铃草概率掉",t:[],stat:"",effect:"种出：火铃草"},
+    {n:"交梨种子",q:"",s:"小西天采交梨概率掉",t:[],stat:"",effect:"种出：交梨"},
+    {n:"树珍珠种子",q:"",s:"小西天采树珍珠概率掉",t:[],stat:"",effect:"种出：树珍珠"},
+    {n:"龙胆种子",q:"",s:"小西天采龙胆概率掉",t:[],stat:"",effect:"种出：龙胆"},
+    {n:"火枣种子",q:"",s:"火焰山采火枣概率掉",t:[],stat:"",effect:"种出：火枣"},
+    {n:"地涌金莲种子",q:"",s:"小西天刷地莲精概率掉",t:["易漏"],stat:"",effect:"种出：地涌金莲"},
+    {n:"千年人参种子",q:"",s:"小西天打老人参精掉",t:["BOSS"],stat:"",effect:"种出：千年人参 / 老山参"},
+    {n:"猴头菌种子",q:"",s:"盘丝岭打菇女掉",t:["BOSS"],stat:"",effect:"种出：猴头菌 / 葛蕈"},
+    {n:"九叶灵芝草种子",q:"",s:"火焰山打九叶灵芝精掉",t:["BOSS"],stat:"",effect:"种出：九叶灵芝草 / 紫芝"}
+  ]},
+  { id:"recipe", name:"丹方", items:[
+    {n:"九转还魂丹",q:"",s:"二周目戌狗处购买",t:["二周目"],stat:"",effect:"炼制：九转还魂丹（复活一次）"},
+    {n:"七返火丹",q:"",s:"火焰山隐璧水洞宝箱",t:[],stat:"",effect:"炼制：七返火丹（火系相关丹药）"},
+    {n:"登仙散",q:"",s:"第六回击败王灵官必得",t:["BOSS"],stat:"",effect:"炼制：登仙散（法力相关）"},
+    {n:"龙光倍力丸",q:"",s:"第四回戌狗处购买",t:[],stat:"",effect:"炼制：龙光倍力丸（攻击相关）"},
+    {n:"加味参势丸",q:"",s:"第四回花间桥棺材",t:[],stat:"",effect:"炼制：加味参势丸（棍势相关）"},
+    {n:"聚珍伏虎丸",q:"",s:"第三回戒语廊宝箱",t:[],stat:"",effect:"炼制：聚珍伏虎丸（暴击相关）"},
+    {n:"镜中丹",q:"",s:"第四回盘丝洞村落房内",t:[],stat:"",effect:"炼制：镜中丹（减伤相关）"},
+    {n:"轻身散",q:"",s:"第三回小雷音寺二楼",t:[],stat:"",effect:"炼制：轻身散（闪避相关）"},
+    {n:"保命丹",q:"",s:"第四回隐紫云山村落內",t:[],stat:"",effect:"炼制：保命丹（复活/回血）"},
+    {n:"朝元膏",q:"",s:"戌狗处购买",t:[],stat:"",effect:"炼制：朝元膏（法力上限）"},
+    {n:"益气膏",q:"",s:"戌狗处购买",t:[],stat:"",effect:"炼制：益气膏（生命恢复）"},
+    {n:"延寿膏",q:"",s:"戌狗处购买",t:[],stat:"",effect:"炼制：延寿膏（生命上限）"},
+    {n:"坚骨药",q:"",s:"小西天辰龙+黄风岭戌狗支线",t:[],stat:"",effect:"炼制：坚骨药（防御）"},
+    {n:"避凶药",q:"",s:"黄风岭戌狗支线击败浪里个波",t:["BOSS"],stat:"",effect:"炼制：避凶药（减伤）"}
+  ]},
+  { id:"mat_sell", name:"材料·贩卖品", items:[
+    {n:"碎金片",q:"良",s:"卖出99灵蕴",t:[],stat:"",effect:""},
+    {n:"小金片",q:"上",s:"卖出灵蕴",t:[],stat:"",effect:""},
+    {n:"大金片",q:"特",s:"卖出灵蕴",t:[],stat:"",effect:""},
+    {n:"金稳兽",q:"特",s:"卖出6000灵蕴",t:[],stat:"",effect:""}
+  ]},
+  { id:"mat_wt", name:"材料·兵器通材", items:[
+    {n:"精石",q:"良",s:"铸造兵器通用",t:[],stat:"",effect:""},
+    {n:"妖核",q:"上",s:"铸造兵器通用",t:[],stat:"",effect:""},
+    {n:"镔铁砂",q:"特",s:"铸造兵器通用",t:[],stat:"",effect:""},
+    {n:"金趁心",q:"仙",s:"铸造兵器通用",t:[],stat:"",effect:""},
+    {n:"先天锟钢",q:"神珍",s:"铸造兵器通用",t:[],stat:"",effect:""}
+  ]},
+  { id:"mat_ws", name:"材料·兵器专材", items:[
+    {n:"神风玛瑙",q:"上",s:"兽棍·貂鼠",t:["BOSS"],stat:"",effect:""},
+    {n:"玉垂牙",q:"良",s:"鳞棍·双蛇 / 楮白枪头",t:["BOSS"],stat:"",effect:""},
+    {n:"铁石心",q:"上",s:"出云棍",t:["BOSS"],stat:"",effect:""},
+    {n:"烈火乌金",q:"上",s:"兽棍·熊罴",t:["BOSS"],stat:"",effect:""},
+    {n:"银星雾角",q:"特",s:"鳞棍·亢金",t:["BOSS"],stat:"",effect:""},
+    {n:"龙珠",q:"特",s:"飞龙宝杖 / 天龙棍×9",t:["BOSS"],stat:"",effect:""},
+    {n:"振雷骨",q:"特",s:"鳞棍·蟠龙",t:["BOSS"],stat:"",effect:""},
+    {n:"青丝刺",q:"特",s:"几丁棍",t:["BOSS"],stat:"",effect:""},
+    {n:"楮白枪头",q:"特",s:"楮白枪",t:["BOSS"],stat:"",effect:""},
+    {n:"掣电尾",q:"特",s:"鳞棍·蟠龙",t:["BOSS"],stat:"",effect:""},
+    {n:"业火晶",q:"仙",s:"业火杖",t:["BOSS"],stat:"",effect:""},
+    {n:"架海筋",q:"仙",s:"飞龙宝杖",t:["BOSS"],stat:"",effect:""},
+    {n:"金睛兽嚼",q:"仙",s:"兽棍·金睛",t:["BOSS"],stat:"",effect:""},
+    {n:"摇山爪",q:"仙",s:"飞龙宝杖",t:["BOSS"],stat:"",effect:""},
+    {n:"万象圆光",q:"仙",s:"兵器专材",t:[],stat:"",effect:""},
+    {n:"金光眼眸",q:"仙",s:"昆棍·百眼",t:["BOSS"],stat:"",effect:""},
+    {n:"连理肢",q:"仙",s:"昆棍·蛛仙",t:["BOSS"],stat:"",effect:""},
+    {n:"通天角",q:"神珍",s:"昆棍·通天",t:["二周目","BOSS"],stat:"",effect:""}
+  ]},
+  { id:"mat_ct", name:"材料·披挂通材", items:[
+    {n:"绵纱",q:"良",s:"披挂铸造通用",t:[],stat:"",effect:""},
+    {n:"蚕丝",q:"上",s:"披挂铸造通用",t:[],stat:"",effect:""},
+    {n:"寒铁叶",q:"特",s:"披挂铸造通用",t:[],stat:"",effect:""},
+    {n:"妖生角",q:"仙",s:"披挂铸造通用",t:[],stat:"",effect:""},
+    {n:"细金线",q:"仙",s:"披挂铸造通用",t:[],stat:"",effect:""},
+    {n:"毒敌钩",q:"仙",s:"披挂铸造通用",t:[],stat:"",effect:""},
+    {n:"虹霓云绦",q:"神珍",s:"披挂铸造通用",t:[],stat:"",effect:""},
+    {n:"大力铁角",q:"神珍",s:"大力套装（二周目材料才够）",t:["二周目","BOSS"],stat:"",effect:""}
+  ]},
+  { id:"mat_rare", name:"材料·稀罕材料", items:[
+    {n:"小活师",q:"特",s:"葫芦/酒升阶、炼丹",t:[],stat:"",effect:""},
+    {n:"玲珑内丹",q:"特",s:"炼制小仙丹",t:[],stat:"",effect:""},
+    {n:"铁中血",q:"特",s:"炼养精魄",t:[],stat:"",effect:""},
+    {n:"佛手·右",q:"特",s:"稀罕材料",t:[],stat:"",effect:""},
+    {n:"佛手·左",q:"特",s:"稀罕材料",t:[],stat:"",effect:""},
+    {n:"虚空结",q:"仙",s:"炼化精魄",t:[],stat:"",effect:""},
+    {n:"落伽香藤",q:"仙",s:"葫芦/酒升阶",t:[],stat:"",effect:""},
+    {n:"三冬虫",q:"仙",s:"泡酒成佳酿",t:[],stat:"",effect:""}
+  ]},
+  { id:"spirit", name:"精魄", items:[
+    {n:"幽魂",q:"",s:"",stat:"",effect:"点天赋用"},{n:"波里个浪",q:"",s:"",stat:"",effect:"点天赋用"},
+    {n:"广谋",q:"",s:"",stat:"",effect:"点天赋用"},{n:"狼刺客",q:"",s:"",stat:"",effect:"点天赋用"},
+    {n:"地狼",q:"",s:"",stat:"",effect:"点天赋用"},{n:"鼠弩手",q:"",s:"",stat:"",effect:"点天赋用"},
+    {n:"沙二郎",q:"",s:"",stat:"",effect:"点天赋用"},{n:"石双双",q:"",s:"",stat:"",effect:"点天赋用"},
+    {n:"骨悚然",q:"",s:"",stat:"",effect:"点天赋用"},{n:"鼠司空",q:"",s:"",stat:"",effect:"点天赋用"},
+    {n:"百目真人",q:"",s:"",stat:"",effect:"点天赋用"},{n:"疾蝠",q:"",s:"",stat:"",effect:"点天赋用"},
+    {n:"狸侍长",q:"",s:"",stat:"",effect:"点天赋用"},{n:"鼠禁卫",q:"",s:"",stat:"",effect:"点天赋用"},
+    {n:"虎伥",q:"",s:"",stat:"",effect:"点天赋用"},{n:"疯虎",q:"",s:"",stat:"",effect:"点天赋用"},
+    {n:"巡山鬼",q:"",s:"",stat:"",effect:"点天赋用"},{n:"菇男",q:"",s:"",stat:"",effect:"点天赋用"},
+    {n:"夜叉奴",q:"",s:"",stat:"",effect:"点天赋用"},{n:"戒刀僧",q:"",s:"",stat:"",effect:"点天赋用"},
+    {n:"隼居士",q:"",s:"",stat:"",effect:"点天赋用"},{n:"无量蝠",q:"",s:"",stat:"",effect:"点天赋用"},
+    {n:"赤发鬼",q:"",s:"",stat:"",effect:"点天赋用"},{n:"不白",q:"",s:"",stat:"",effect:"点天赋用"},
+    {n:"老人参精",q:"",s:"",stat:"",effect:"点天赋用"},{n:"不能",q:"",s:"",stat:"",effect:"点天赋用"},
+    {n:"鸦香客",q:"",s:"",stat:"",effect:"点天赋用"},{n:"泥塑金刚",q:"",s:"",stat:"",effect:"点天赋用"},
+    {n:"不净",q:"",s:"",stat:"",effect:"点天赋用"},{n:"不空",q:"",s:"",stat:"",effect:"点天赋用"},
+    {n:"幽灯鬼",q:"",s:"",stat:"",effect:"点天赋用"},{n:"虫校尉",q:"",s:"",stat:"",effect:"点天赋用"},
+    {n:"琴螂仙",q:"",s:"",stat:"",effect:"点天赋用"},{n:"蝎太子",q:"",s:"",stat:"",effect:"点天赋用"},
+    {n:"傀蛛士",q:"",s:"",stat:"",effect:"点天赋用"},{n:"百足虫",q:"",s:"",stat:"",effect:"点天赋用"},
+    {n:"儡蜱士",q:"",s:"",stat:"",effect:"点天赋用"},{n:"蜻蜓精",q:"",s:"",stat:"",effect:"点天赋用"},
+    {n:"虫总兵",q:"",s:"",stat:"",effect:"点天赋用"},{n:"蛇捕头",q:"",s:"",stat:"",effect:"点天赋用"},
+    {n:"蘑女",q:"",s:"",stat:"",effect:"点天赋用"},{n:"蛇司药",q:"",s:"",stat:"",effect:"点天赋用"},
+    {n:"青冉冉",q:"",s:"",stat:"",effect:"点天赋用"},{n:"黑脸鬼",q:"",s:"",stat:"",effect:"点天赋用"},
+    {n:"石父",q:"",s:"",stat:"",effect:"点天赋用"},{n:"鳖宝",q:"",s:"",stat:"",effect:"点天赋用"},
+    {n:"燧统领",q:"",s:"",stat:"",effect:"点天赋用"},{n:"地罗刹",q:"",s:"",stat:"",effect:"点天赋用"},
+    {n:"雾里云云里雾",q:"",s:"",stat:"",effect:"点天赋用"},{n:"九叶灵芝精",q:"",s:"",stat:"",effect:"点天赋用"},
+    {n:"燧先锋",q:"",s:"",stat:"",effect:"点天赋用"},{n:"火灵元母",q:"",s:"",stat:"",effect:"点天赋用"},
+    {n:"兴烘掀",q:"",s:"",stat:"",effect:"点天赋用"},{n:"掀烘兴",q:"",s:"",stat:"",effect:"点天赋用"}
+  ]}
+];
+
+/* ============ 状态管理 ============ */
+const KEY = "wukong_collector_v2";
+let state = load();
+function load(){
+  // 优先：文件自身烘焙的进度（离线单文件，跨浏览器/跨会话都可靠）
+  try{
+    if(window.__INITIAL_STATE__ && typeof window.__INITIAL_STATE__ === "object"){
+      return window.__INITIAL_STATE__;
+    }
+  }catch(e){}
+  // 兜底：本机浏览器存储（同 file:// 原点下可用，预览面板/隐私模式可能失效）
+  try{ return JSON.parse(localStorage.getItem(KEY)) || {done:{},notes:{},tags:{}}; }
+  catch(e){ return {done:{},notes:{},tags:{}}; }
+}
+function save(){ localStorage.setItem(KEY, JSON.stringify(state)); }
+function idOf(g, it){ return g.id + "::" + it.n; }
+
+let curGroup = GROUPS[0].id;
+const PRESET = ["易漏","二周目","BOSS","隐藏","支线","豪华版"];
+
+/* ============ 渲染 ============ */
+function renderTabs(){
+  const tabs = document.getElementById("tabs");
+  tabs.innerHTML = "";
+  GROUPS.forEach(g=>{
+    const total = g.items.length;
+    const done = g.items.filter(it=>state.done[idOf(g,it)]).length;
+    const el = document.createElement("div");
+    el.className = "tab" + (g.id===curGroup?" on":"");
+    el.innerHTML = g.name + '<span class="c">'+done+'/'+total+'</span>';
+    el.onclick = ()=>{ curGroup=g.id; renderTabs(); renderList(); };
+    tabs.appendChild(el);
+  });
+}
+function renderList(){
+  const g = GROUPS.find(x=>x.id===curGroup);
+  const main = document.getElementById("main");
+  const q = document.getElementById("search").value.trim().toLowerCase();
+  const filt = document.getElementById("filter").value;
+  const fMiss = document.getElementById("fMiss").checked;
+  const fNg = document.getElementById("fNg").checked;
+  main.innerHTML = "";
+  let items = g.items.map(it=>({it, id:idOf(g,it)}));
+  if(fMiss) items.sort((a,b)=> (rankMiss(b.it)-rankMiss(a.it)) );
+  items = items.filter(({it,id})=>{
+    if(filt==="todo" && state.done[id]) return false;
+    if(filt==="done" && !state.done[id]) return false;
+    if(fNg && !(it.t||[]).includes("二周目")) return false;
+    if(q){
+      const hay = (it.n+" "+(it.s||"")+" "+(it.stat||"")+" "+(it.effect||"")+" "+((it.t||[]).join(" "))+" "+((state.tags[id]||[]).join(" "))+" "+(state.notes[id]||"")).toLowerCase();
+      if(!hay.includes(q)) return false;
+    }
+    return true;
+  });
+  if(!items.length){ main.innerHTML = '<div class="empty">这个分类下没有匹配项 🐒</div>'; updateTotal(); return; }
+  const wrap = document.createElement("div");
+  items.forEach(({it,id})=>{
+    const done = !!state.done[id];
+    const tags = (it.t||[]).concat(state.tags[id]||[]);
+    const div = document.createElement("div");
+    div.className = "item" + (done?" done":"");
+    let chips = tags.map(t=>'<span class="tg '+t+'">'+t+'</span>').join("");
+    let statLine = it.stat ? '<div class="stat">属性：'+esc(it.stat)+'</div>' : '';
+    let effLine = it.effect ? '<div class="eff">特性：'+esc(it.effect)+'</div>' : '';
+    div.innerHTML =
+      '<input type="checkbox" class="chk" '+(done?"checked":"")+'>'+
+      '<div class="nm"><div class="title">'+
+        (it.q?'<span class="q '+it.q+'">'+it.q+'</span>':'')+it.n+'</div>'+
+        (it.s?'<div class="sub">'+esc(it.s)+'</div>':'')+
+        statLine + effLine +
+        (state.notes[id]?'<div class="sub" style="color:var(--gold-dim)">📝 '+esc(state.notes[id])+'</div>':'')+
+        (chips?'<div class="tags">'+chips+'</div>':'')+
+      '</div>'+
+      '<div class="ops">'+
+        '<button class="mini" data-act="tag">+标签</button>'+
+        '<button class="mini" data-act="note">备注</button>'+
+      '</div>';
+    div.querySelector(".chk").onchange = (e)=>{ state.done[id]=e.target.checked; save(); renderTabs(); updateTotal(); };
+    div.querySelector('[data-act="tag"]').onclick = ()=> openModal(id);
+    div.querySelector('[data-act="note"]').onclick = ()=>{
+      const v = prompt("备注（" + it.n + "）：", state.notes[id]||"");
+      if(v!==null){ state.notes[id]=v.trim(); save(); renderList(); }
+    };
+    wrap.appendChild(div);
+  });
+  main.appendChild(wrap);
+  updateTotal();
+}
+function rankMiss(it){
+  const t = it.t||[];
+  if(t.includes("易漏")) return 2;
+  if(t.includes("二周目")) return 1;
+  return 0;
+}
+function updateTotal(){
+  let total=0, done=0;
+  GROUPS.forEach(g=>g.items.forEach(it=>{ total++; if(state.done[idOf(g,it)]) done++; }));
+  const pct = total? Math.round(done/total*100):0;
+  document.getElementById("bar").style.width = pct+"%";
+  document.getElementById("totalTxt").textContent = done+" / "+total+" ("+pct+"%)";
+}
+function esc(s){ return s.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
+
+/* ============ 标签弹窗 ============ */
+let modalId = null;
+function openModal(id){
+  modalId = id;
+  document.getElementById("modalTitle").textContent = "打标签";
+  const box = document.getElementById("presetChips");
+  const curTags = state.tags[id] || [];
+  box.innerHTML = "";
+  PRESET.forEach(p=>{
+    const s = document.createElement("span");
+    s.textContent = p;
+    s.className = curTags.includes(p) ? "on" : "";
+    s.onclick = ()=>{ s.classList.toggle("on"); };
+    box.appendChild(s);
+  });
+  document.getElementById("customTag").value = curTags.filter(t=>!PRESET.includes(t)).join(" ");
+  document.getElementById("modal").classList.add("on");
+}
+function closeModal(){ document.getElementById("modal").classList.remove("on"); modalId=null; }
+document.getElementById("modalCancel").onclick = closeModal;
+document.getElementById("modalOk").onclick = ()=>{
+  const id = modalId;
+  const presetSel = [...document.querySelectorAll("#presetChips span.on")].map(s=>s.textContent);
+  const custom = document.getElementById("customTag").value.trim().split(/\s+/).filter(Boolean);
+  state.tags[id] = presetSel.concat(custom);
+  save(); closeModal(); renderList(); renderTabs();
+};
+document.getElementById("customTag").addEventListener("keydown",e=>{ if(e.key==="Enter") document.getElementById("modalOk").click(); });
+
+/* ============ 导入导出重置 ============ */
+document.getElementById("export").onclick = ()=>{
+  const blob = new Blob([JSON.stringify(state,null,2)],{type:"application/json"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "黑神话收集进度_"+new Date().toISOString().slice(0,10)+".json";
+  a.click();
+};
+document.getElementById("importBtn").onclick = ()=> document.getElementById("importFile").click();
+document.getElementById("importFile").onchange = e=>{
+  const f = e.target.files[0]; if(!f) return;
+  const r = new FileReader();
+  r.onload = ()=>{ try{ const d=JSON.parse(r.result); if(d&&d.done){ state=d; save(); renderTabs(); renderList(); alert("导入成功"); } }catch(err){ alert("文件格式错误"); } };
+  r.readAsText(f);
+};
+document.getElementById("reset").onclick = ()=>{
+  if(confirm("确定清空所有收集进度？此操作不可撤销（建议先导出备份）。")){
+    state={done:{},notes:{},tags:{}}; save(); renderTabs(); renderList();
+  }
+};
+
+/* 把进度烘焙进 HTML 文件本身，下载一个“带进度”的单文件，双击即记得 */
+function downloadBlob(blob, name){
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  a.download=name;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(a.href),3000);
+}
+document.getElementById("saveHtml").onclick = ()=>{
+  if(!confirm(
+    "将把当前进度烘焙进一份新的 HTML 文件并下载。\n\n"+
+    "用法：以后【双击打开这份“带进度”的文件】即可看到你的勾选，\n"+
+    "不依赖浏览器存储、不挑浏览器、不联网。\n"+
+    "原 wukong-collector.html 留作空白模板（数据更全时可覆盖更新）。\n\n"+
+    "每次想保存时，点这个按钮重新生成一份即可。"
+  )) return;
+  const data = JSON.stringify(state).replace(/</g,"\\u003c"); // 防止备注里的 <\/script> 截断页面
+  const anchorRe = /<script id="init-state">[\s\S]*?<\/script>/;
+  let html = "<!DOCTYPE html>\n" + document.documentElement.outerHTML;
+  if(!anchorRe.test(html)){
+    alert("保存失败：未找到存档锚点，请改用「导出」JSON 备份。");
+    return;
+  }
+  html = html.replace(anchorRe, '<script id="init-state">window.__INITIAL_STATE__='+data+';<\/script>');
+  downloadBlob(new Blob([html],{type:"text/html"}), "黑神话收集_带进度.html");
+};
+document.getElementById("search").oninput = renderList;
+document.getElementById("filter").onchange = renderList;
+document.getElementById("fMiss").onchange = renderList;
+document.getElementById("fNg").onchange = renderList;
+
+/* ============ GitHub 云存档 ============ */
+function val(id){ return document.getElementById(id).value.trim(); }
+function ghCfg(){ try{ return JSON.parse(localStorage.getItem("wukong_gh"))||{}; }catch(e){ return {}; } }
+function persistGH(){
+  const c={user:val("ghUser"),repo:val("ghRepo"),branch:val("ghBranch")||"main",token:val("ghToken")};
+  localStorage.setItem("wukong_gh",JSON.stringify(c));
+  return c;
+}
+function setGHStatus(m){ const el=document.getElementById("ghStatus"); if(el) el.textContent=m; }
+function b64encode(str){ return btoa(unescape(encodeURIComponent(str))); }
+function b64decode(b64){ return decodeURIComponent(escape(atob(b64.replace(/\s/g,"")))); }
+
+async function saveGH(){
+  const c=ghCfg();
+  if(!c.user||!c.repo||!c.token){ setGHStatus("请先填好用户名、仓库名和 Token"); return; }
+  setGHStatus("保存中…");
+  const url="https://api.github.com/repos/"+c.user+"/"+c.repo+"/contents/state.json";
+  const H={Authorization:"Bearer "+c.token,Accept:"application/vnd.github+json"};
+  try{
+    let sha;
+    const g=await fetch(url+"?ref="+encodeURIComponent(c.branch),{headers:H});
+    if(g.status===200){ sha=(await g.json()).sha; }
+    else if(g.status!==404){ const e=await g.json().catch(()=>({})); setGHStatus("读取失败: "+(e.message||g.status)); return; }
+    const body={message:"wukong progress update",content:b64encode(JSON.stringify(state)),branch:c.branch};
+    if(sha) body.sha=sha;
+    const p=await fetch(url,{method:"PUT",headers:Object.assign({},H,{"Content-Type":"application/json"}),body:JSON.stringify(body)});
+    if(p.ok){ setGHStatus("✅ 已保存到 GitHub（"+c.user+"/"+c.repo+"）"); }
+    else{ const e=await p.json().catch(()=>({})); setGHStatus("保存失败: "+(e.message||p.status)); }
+  }catch(err){ setGHStatus("网络错误: "+err.message); }
+}
+async function loadGH(){
+  const c=ghCfg();
+  if(!c.user||!c.repo||!c.token){ setGHStatus("请先填好用户名、仓库名和 Token"); return; }
+  setGHStatus("加载中…");
+  const url="https://api.github.com/repos/"+c.user+"/"+c.repo+"/contents/state.json?ref="+encodeURIComponent(c.branch);
+  const H={Authorization:"Bearer "+c.token,Accept:"application/vnd.github+json"};
+  try{
+    const r=await fetch(url,{headers:H});
+    if(r.status===404){ setGHStatus("仓库里还没有 state.json，先点「保存到 GitHub」"); return; }
+    if(!r.ok){ const e=await r.json().catch(()=>({})); setGHStatus("加载失败: "+(e.message||r.status)); return; }
+    const j=await r.json();
+    const d=JSON.parse(b64decode(j.content));
+    if(d&&d.done){ state=d; save(); renderTabs(); renderList(); setGHStatus("✅ 已从 GitHub 加载"); }
+    else setGHStatus("数据格式不对");
+  }catch(err){ setGHStatus("网络错误: "+err.message); }
+}
+document.getElementById("ghBtn").onclick=()=>{
+  const c=ghCfg();
+  document.getElementById("ghUser").value=c.user||"";
+  document.getElementById("ghRepo").value=c.repo||"";
+  document.getElementById("ghBranch").value=c.branch||"main";
+  document.getElementById("ghToken").value=c.token||"";
+  setGHStatus("");
+  document.getElementById("ghModal").classList.add("on");
+};
+document.getElementById("ghClose").onclick=()=>document.getElementById("ghModal").classList.remove("on");
+document.getElementById("ghSave").onclick=()=>{ persistGH(); saveGH(); };
+document.getElementById("ghLoad").onclick=()=>{ persistGH(); loadGH(); };
+
+// 启动后若已配置 GitHub，自动拉取最新进度（实现“任意设备随时访问”）
+const _gh=ghCfg();
+if(_gh.user&&_gh.repo&&_gh.token){ loadGH(); }
+
+renderTabs(); renderList();
+</script>
+</body>
+</html>
